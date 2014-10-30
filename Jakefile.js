@@ -61,4 +61,11 @@ task('build', ['lint'], function(compsBase32, buildName) {
 	}
 });
 
+desc('Watch src directory and build on any changes');
+watchTask(['build'], function () {
+    this.watchFiles.include([
+    './src/**/*.js'
+    ]);
+});
+
 task('default', ['build']);
