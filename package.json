@@ -11,9 +11,9 @@
     "node": "~0.6.11"
   },
   "dependencies": {
-    "jake": "0.2.x",
-    "jshint": "0.7.x",
-    "uglify-js": "1.2.x"
+    "jake": "8.x.x",
+    "jshint": "2.x.x",
+    "uglify-js": "2.x.x"
   },
   "devDependencies": {},
   "optionalDependencies": {},

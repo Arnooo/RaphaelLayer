@@ -23,8 +23,8 @@ task('lint', function() {
 desc('Combine and compress Raphael Layer source files');
 task('build', ['lint'], function(compsBase32, buildName) {
 	var pathPart = 'dist/rlayer' + (buildName ? '-' + buildName : ''),
-		srcPath = pathPart + '-src.js',
-		path = pathPart + '.js';
+		srcPath = pathPart + '.js',
+		path = pathPart + '.min.js';
 
 	var files = build.getFiles(compsBase32);
 

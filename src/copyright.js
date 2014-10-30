@@ -3,5 +3,8 @@
  (c) 2012-2013, David Howell, Dynamic Methods Pty Ltd
 
  Version 0.1.3
+
+ Fork by Arnooo: https://github.com/Arnooo/RaphaelLayer
+
 */
 

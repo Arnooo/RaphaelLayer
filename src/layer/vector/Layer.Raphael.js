@@ -59,7 +59,7 @@ L.Map.include({
 	},
 
 	_updateRaphaelViewport: function () {
-		var	p = 0.02,
+		var	p = L.Path.CLIP_PADDING,
 			size = this.getSize(),
 			panePos = L.DomUtil.getPosition(this._mapPane),
 			min = panePos.multiplyBy(-1)._subtract(size.multiplyBy(p)),
