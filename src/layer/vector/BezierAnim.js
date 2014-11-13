@@ -2,7 +2,6 @@ R.BezierAnim = R.Layer.extend({
     initialize: function(latlngs, attr, cb, options) {
         R.Layer.prototype.initialize.call(this, options);
 
-        console.log(latlngs[0]);
         this._latlngs = latlngs;
         this._attr = attr;
         this._cb = cb;
@@ -32,30 +31,33 @@ R.BezierAnim = R.Layer.extend({
         var pathAttrAnimated = {stroke: "blue", "stroke-width": 4, alongBezier:0};
         var pathAttrFix = {stroke: "blue", "stroke-width": 4, "stroke-linecap": "round", cursor:"pointer"};
         
-        var bezierNumber = self._latlngs.length / 4;
-        if(bezierNumber>1){
-            function move(dx, dy) {
-                this.update(dx - (this.dx || 0), dy - (this.dy || 0));
-                this.dx = dx;
-                this.dy = dy;
-            }
-            function up() {
-                this.dx = this.dy = 0;
-            }
+        function move(dx, dy) {
+            this.update(dx - (this.dx || 0), dy - (this.dy || 0));
+            this.dx = dx;
+            this.dy = dy;
+        }
+        function up() {
+            this.dx = this.dy = 0;
+        }
+        if(self.options.editor){
             self._circleControls = self._paper.set();
-            for(var bezierID = 0; bezierID < bezierNumber; bezierID++){
-                var start = self._map.latLngToLayerPoint(self._latlngs[bezierID*4]);
-                var controlOne = self._map.latLngToLayerPoint(this._latlngs[1+bezierID*4]);
-                var controlTwo = self._map.latLngToLayerPoint(this._latlngs[2+bezierID*4]);
-                var end = self._map.latLngToLayerPoint(self._latlngs[3+bezierID*4]);
-                self._arrayBezier.push(["M", start.x, start.y]);
-                self._arrayBezier.push(["C", controlOne.x, controlOne.y, controlTwo.x, controlTwo.y, end.x, end.y]);
-                
+        }
+        var bezierNumber = self._latlngs.length / 4;
+        for(var bezierID = 0; bezierID < bezierNumber; bezierID++){
+            var start = self._map.latLngToLayerPoint(self._latlngs[bezierID*4]);
+            var controlOne = self._map.latLngToLayerPoint(this._latlngs[1+bezierID*4]);
+            var controlTwo = self._map.latLngToLayerPoint(this._latlngs[2+bezierID*4]);
+            var end = self._map.latLngToLayerPoint(self._latlngs[3+bezierID*4]);
+            self._arrayBezier.push(["M", start.x, start.y]);
+            self._arrayBezier.push(["C", controlOne.x, controlOne.y, controlTwo.x, controlTwo.y, end.x, end.y]);
+            
 //                 pathWithControls.push(["M", start.x, start.y]);
 //                 pathWithControls.push(["L", start.x+controlOne.x, start.y+controlOne.y]);
 //                 pathWithControls.push(["M", end.x+controlTwo.x, end.y+controlTwo.y]);
 //                 pathWithControls.push(["L", end.x, end.y]);
-                
+            
+            
+            if(self._circleControls){
                 var controls = [
                     ["M", start.x, start.y],
                     ["L", controlOne.x, controlOne.y],
@@ -64,21 +66,21 @@ R.BezierAnim = R.Layer.extend({
                 ];
                 self._arrayWithControls.push(controls);
                 var pathWithControls = self._paper.path(controls);
-//                 pathWithControls.hover(function(){
-//                     console.log("HOVER IN");
-//                     self._map.dragging.disable();
-//                 },function(){
-//                     self._map.dragging.enable();
-//                     
-// //                     if(self._cb){
-// //                         var dataToSend = self.options.info;
-// //                         dataToSend.controls = [
-// //                             [controls[1][1] - controls[0][1], controls[1][2] - controls[0][2]],
-// //                             [controls[2][1] - controls[0][1], controls[2][2] - controls[0][2]]
-// //                         ];
-// //                         self._cb.onMovePath(dataToSend);
-// //                     }
-//                 });
+//                     pathWithControls.hover(function(){
+//                         console.log("HOVER IN");
+//                         self._map.dragging.disable();
+//                     },function(){
+//                         console.log("onDragPathControls");
+//                         self._map.dragging.enable();
+//                         if(self._cb && self._cb.onDragPathControls){
+//                             var dataToSend = self.options.info;
+// //                             dataToSend.controls = [
+// //                                 [controls[1][1] - controls[0][1], controls[1][2] - controls[0][2]],
+// //                                 [controls[2][1] - controls[0][1], controls[2][2] - controls[0][2]]
+// //                             ];
+//                             self._cb.onDragPathControls(dataToSend);
+//                         }
+//                     });
                 pathWithControls.attr({stroke: "#ccc", "stroke-dasharray": "- "});
                 
                 self._circleControls.push(
@@ -91,293 +93,146 @@ R.BezierAnim = R.Layer.extend({
                 self._circleControls.hover(function(){
                     console.log("HOVER IN");
                     self._map.dragging.disable();
+                    
+                    if(self._cb && self._cb.onHoverControls){
+                        self._cb.onHoverControls();
+                    }
                 },function(){
                     self._map.dragging.enable();
+                    if(self._cb && self._cb.onDragControls){
+                        var dataToSend = self.options.info;
+                        self._cb.onDragControls(dataToSend);
+                    }
                 });
                 self._circleControls[bezierID*5+1].update = function (x, y) {
                     var X = this.attr("cx") + x,
-                              Y = this.attr("cy") + y;
-                              this.attr({cx: X, cy: Y});
-                              var currentBezierID = this.data("bezierID");
-                              self._arrayBezier[currentBezierID*2+0][1] = X;
-                              self._arrayBezier[currentBezierID*2+0][2] = Y;
-                              self._arrayWithControls[currentBezierID][0][1] = X;
-                              self._arrayWithControls[currentBezierID][0][2] = Y;
-                              self._circleControls[currentBezierID*5+2].update(x, y);
+                            Y = this.attr("cy") + y;
+                            this.attr({cx: X, cy: Y});
+                            var currentBezierID = this.data("bezierID");
+                            self._arrayBezier[currentBezierID*2+0][1] = X;
+                            self._arrayBezier[currentBezierID*2+0][2] = Y;
+                            self._arrayWithControls[currentBezierID][0][1] = X;
+                            self._arrayWithControls[currentBezierID][0][2] = Y;
+                            self._circleControls[currentBezierID*5+2].update(x, y);
                 };
                 self._circleControls[bezierID*5+1].data("bezierID", bezierID);
                 self._circleControls[bezierID*5+2].update = function (x, y) {
                     var X = this.attr("cx") + x,
-                              Y = this.attr("cy") + y;
-                              this.attr({cx: X, cy: Y});
-                              var currentBezierID = this.data("bezierID");
-                              console.log(self._arrayBezier);
-                              self._arrayBezier[currentBezierID*2+1][1] = X;
-                              self._arrayBezier[currentBezierID*2+1][2] = Y;
-                              self._arrayWithControls[currentBezierID][1][1] = X;
-                              self._arrayWithControls[currentBezierID][1][2] = Y;
-                              self._pathBezier.attr({path: self._arrayBezier});
-                              self._circleControls[currentBezierID*5+0].attr({path: self._arrayWithControls[currentBezierID]});
+                            Y = this.attr("cy") + y;
+                            this.attr({cx: X, cy: Y});
+                            var currentBezierID = this.data("bezierID");
+                            self._arrayBezier[currentBezierID*2+1][1] = X;
+                            self._arrayBezier[currentBezierID*2+1][2] = Y;
+                            self._arrayWithControls[currentBezierID][1][1] = X;
+                            self._arrayWithControls[currentBezierID][1][2] = Y;
+                            self._pathBezier.attr({path: self._arrayBezier});
+                            self._circleControls[currentBezierID*5+0].attr({path: self._arrayWithControls[currentBezierID]});
                 };
                 self._circleControls[bezierID*5+2].data("bezierID", bezierID);
                 self._circleControls[bezierID*5+3].update = function (x, y) {
                     var X = this.attr("cx") + x,
-                              Y = this.attr("cy") + y;
-                              this.attr({cx: X, cy: Y});
-                              var currentBezierID = this.data("bezierID");
-                              self._arrayBezier[currentBezierID*2+1][3] = X;
-                              self._arrayBezier[currentBezierID*2+1][4] = Y;
-                              self._arrayWithControls[currentBezierID][2][1] = X;
-                              self._arrayWithControls[currentBezierID][2][2] = Y;
-                              self._pathBezier.attr({path: self._arrayBezier});
-                              self._circleControls[currentBezierID*5+0].attr({path: self._arrayWithControls[currentBezierID]});
+                            Y = this.attr("cy") + y;
+                            this.attr({cx: X, cy: Y});
+                            var currentBezierID = this.data("bezierID");
+                            self._arrayBezier[currentBezierID*2+1][3] = X;
+                            self._arrayBezier[currentBezierID*2+1][4] = Y;
+                            self._arrayWithControls[currentBezierID][2][1] = X;
+                            self._arrayWithControls[currentBezierID][2][2] = Y;
+                            self._pathBezier.attr({path: self._arrayBezier});
+                            self._circleControls[currentBezierID*5+0].attr({path: self._arrayWithControls[currentBezierID]});
                 };
                 self._circleControls[bezierID*5+3].data("bezierID", bezierID);
                 self._circleControls[bezierID*5+4].update = function (x, y) {
                     var X = this.attr("cx") + x,
-                              Y = this.attr("cy") + y;
-                              this.attr({cx: X, cy: Y});
-                              var currentBezierID = this.data("bezierID");
-                              self._arrayBezier[currentBezierID*2+1][5] = X;
-                              self._arrayBezier[currentBezierID*2+1][6] = Y;
-                              self._arrayWithControls[currentBezierID][3][1] = X;
-                              self._arrayWithControls[currentBezierID][3][2] = Y;
-                              self._circleControls[currentBezierID*5+3].update(x, y);
+                            Y = this.attr("cy") + y;
+                            this.attr({cx: X, cy: Y});
+                            var currentBezierID = this.data("bezierID");
+                            self._arrayBezier[currentBezierID*2+1][5] = X;
+                            self._arrayBezier[currentBezierID*2+1][6] = Y;
+                            self._arrayWithControls[currentBezierID][3][1] = X;
+                            self._arrayWithControls[currentBezierID][3][2] = Y;
+                            self._circleControls[currentBezierID*5+3].update(x, y);
                 };
                 self._circleControls[bezierID*5+4].data("bezierID", bezierID);
             }
+        }
+        
+        if(self._circleControls){
             self._circleControls.drag(move, up);
             self._circleControls.hide();
-            
-            self._pathBezier = this._paper.path(self._arrayBezier).hide();
-            self._pathBezier.click(function(){
-                if(self._cb){
-                    self._cb.onClickPath(self.options.info);
-                }
-            });
-            
-            self._pathBezierAnimated = self._paper.path()
-            .data('bezierPath', self._pathBezier)
-            .data('pathLength', self._pathBezier.getTotalLength())
-            .data('reverse', false)
-            .attr(pathAttrAnimated);
-            
-            self._markerAnimated = self._paper.image(self.options.transition.icon.url)
-            .data('bezierPath', self._pathBezier)
-            .data('pathLength', self._pathBezier.getTotalLength())
-            .data('reverse', false)
-            .attr(discattrFollow);
-            self._markerAnimated.hide();
-            
-            this._paper.customAttributes.alongBezier = function(a) {
-                var r = this.data('reverse');
-                var len = this.data('pathLength');
-                if(a > 0)
-                    return {path: this.data('bezierPath').getSubpath(r ? (1-a)*len : 0, r ? len : a*len)};
-            };
-            
-            this._paper.customAttributes.followBezier = function(a) {
-                this.show();
-                var r =  this.data('reverse');
-                var len = this.data('pathLength');
-                var point = this.data('bezierPath').getPointAtLength(r ? len : a*len);
-                var radius = 0;
-                if(a > 0){
-                    radius = 5;
-                }
-                return {
-                    href:self.options.transition.icon.url, 
-                    x: point.x - self.options.transition.icon.anchor[0], 
-                    y: point.y - self.options.transition.icon.anchor[1], 
-                    width:self.options.transition.icon.size[0], 
-                    height: self.options.transition.icon.size[1]
-                };
-            };
-                
-            setTimeout(function(){
-                self._markerAnimated.stop().animate({
-                    followBezier: 0.5
-                }, 
-                self.options.animationDuration, 
-                function() {
-//                     self._markerAnimated.hide();
-                });
-            
-                self._pathBezierAnimated.stop().animate({
-                    alongBezier: 1
-                }, 
-                self.options.animationDuration, 
-                function() {
-                    self._pathBezierAnimated.hide(); 
-                    self._pathBezier.attr(pathAttrFix);
-                    self._pathBezier.show();
-                    if(self._circleControls){
-                        self._circleControls.show();
-                    }
-                });
-            }, self.options.startAnimateTimeout);
         }
-        else{
-            var start = self._map.latLngToLayerPoint(this._latlngs[0]);
-            var controlOne = self._map.latLngToLayerPoint(this._latlngs[1]);
-            var controlTwo = self._map.latLngToLayerPoint(this._latlngs[2]);
-            var end = self._map.latLngToLayerPoint(this._latlngs[3]);
+        
+        self._pathBezier = this._paper.path(self._arrayBezier).hide();
+        self._pathBezier.click(function(){
+            if(self._cb){
+                self._cb.onClickPath(self.options.info);
+            }
+        });
+        
+        self._pathBezierAnimated = self._paper.path()
+        .data('bezierPath', self._pathBezier)
+        .data('pathLength', self._pathBezier.getTotalLength())
+        .data('reverse', false)
+        .attr(pathAttrAnimated);
+        
+        self._markerAnimated = self._paper.image(self.options.transition.icon.url)
+        .data('bezierPath', self._pathBezier)
+        .data('pathLength', self._pathBezier.getTotalLength())
+        .data('reverse', false)
+        .attr(discattrFollow);
+        self._markerAnimated.hide();
+        
+        this._paper.customAttributes.alongBezier = function(a) {
+            var r = this.data('reverse');
+            var len = this.data('pathLength');
+            if(a > 0)
+                return {path: this.data('bezierPath').getSubpath(r ? (1-a)*len : 0, r ? len : a*len)};
+        };
+        
+        this._paper.customAttributes.followBezier = function(a) {
+            this.show();
+            var r =  this.data('reverse');
+            var len = this.data('pathLength');
+            var point = this.data('bezierPath').getPointAtLength(r ? len : a*len);
+            var radius = 0;
+            if(a > 0){
+                radius = 5;
+            }
+            return {
+                href:self.options.transition.icon.url, 
+                x: point.x - self.options.transition.icon.anchor[0], 
+                y: point.y - self.options.transition.icon.anchor[1], 
+                width:self.options.transition.icon.size[0], 
+                height: self.options.transition.icon.size[1]
+            };
+        };
             
-            var x = start.x, y = start.y, ax = controlOne.x, ay = controlOne.y, bx = controlTwo.x, by = controlTwo.y, zx = end.x, zy = end.y;
-
-            var path = [["M", x, y], ["C", ax, ay, bx, by, zx, zy]];
-            self.path2 = [["M", x, y], ["L", ax, ay], ["M", bx, by], ["L", zx, zy]];
-            var curve = self._path = this._paper.path(path).hide();
-            self._path.click(function(){
-                if(self._cb){
-                    self._cb.onClickPath(self.options.info);
-                }
+        setTimeout(function(){
+            self._markerAnimated.stop().animate({
+                followBezier: self.options.transition.stopAt
+            }, 
+            self.options.animationDuration, 
+            function() {
+//                     self._markerAnimated.hide();
             });
         
-            if(self.options.editor){
-                
-                function move(dx, dy) {
-                    this.update(dx - (this.dx || 0), dy - (this.dy || 0));
-                    this.dx = dx;
-                    this.dy = dy;
+            self._pathBezierAnimated.stop().animate({
+                alongBezier: 1
+            }, 
+            self.options.animationDuration, 
+            function() {
+                self._pathBezierAnimated.hide(); 
+                self._pathBezier.attr(pathAttrFix);
+                self._pathBezier.show();
+                if(self._circleControls){
+                    self._circleControls.show();
                 }
-                function up() {
-                    this.dx = this.dy = 0;
-                }
-                var controls = this._circleControls = this._paper.set(
-                    this._paper.path(self.path2).attr({stroke: "#ccc", "stroke-dasharray": ". "}),
-                                this._paper.circle(x, y, 5).attr(discattr),
-                                this._paper.circle(ax, ay, 5).attr(discattr),
-                                this._paper.circle(bx, by, 5).attr(discattr),
-                                this._paper.circle(zx, zy, 5).attr(discattr)
-                ).hover(function(){
-                    self._map.dragging.disable();
-                },function(){
-                    self._map.dragging.enable();
-                    
-                    if(self._cb){
-                        var dataToSend = self.options.info;
-                        dataToSend.controls = [
-                            [self.path2[1][1] - self.path2[0][1], self.path2[1][2] - self.path2[0][2]],
-                            [self.path2[2][1] - self.path2[0][1], self.path2[2][2] - self.path2[0][2]]
-                        ];
-                        self._cb.onMovePath(dataToSend);
-                    }
-                });
-                this._circleControls.hide();
-                controls[1].update = function (x, y) {
-                    var X = this.attr("cx") + x,
-                                Y = this.attr("cy") + y;
-                                this.attr({cx: X, cy: Y});
-                                path[0][1] = X;
-                                path[0][2] = Y;
-                                self.path2[0][1] = X;
-                                self.path2[0][2] = Y;
-                                controls[2].update(x, y);
-                };
-                controls[2].update = function (x, y) {
-                    var X = this.attr("cx") + x,
-                                Y = this.attr("cy") + y;
-                                this.attr({cx: X, cy: Y});
-                                path[1][1] = X;
-                                path[1][2] = Y;
-                                self.path2[1][1] = X;
-                                self.path2[1][2] = Y;
-                                curve.attr({path: path});
-                                controls[0].attr({path: self.path2});
-                };
-                controls[3].update = function (x, y) {
-                    var X = this.attr("cx") + x,
-                                Y = this.attr("cy") + y;
-                                this.attr({cx: X, cy: Y});
-                                path[1][3] = X;
-                                path[1][4] = Y;
-                                self.path2[2][1] = X;
-                                self.path2[2][2] = Y;
-                                curve.attr({path: path});
-                                controls[0].attr({path: self.path2});
-                };
-                controls[4].update = function (x, y) {
-                    var X = this.attr("cx") + x,
-                                Y = this.attr("cy") + y;
-                                this.attr({cx: X, cy: Y});
-                                path[1][5] = X;
-                                path[1][6] = Y;
-                                self.path2[3][1] = X;
-                                self.path2[3][2] = Y;
-                                controls[3].update(x, y);
-                };
-                controls.drag(move, up);
-            }
                 
-            
-            var sub = self._sub = self._paper.path()
-            .data('bezierPath', curve)
-            .data('pathLength', curve.getTotalLength())
-            .data('reverse', false)
-            .attr(pathAttrAnimated);
-            
-            var sub2 = self._sub2 = self._paper.image(self.options.transition.icon.url)
-            .data('bezierPath', curve)
-            .data('pathLength', curve.getTotalLength())
-            .data('reverse', false)
-            .attr(discattrFollow);
-            
-            self._sub2.hide();
-            
-            
-            this._paper.customAttributes.alongBezier = function(a) {
-                var r = this.data('reverse');
-                var len = this.data('pathLength');
-                if(a > 0)
-                    return {path: this.data('bezierPath').getSubpath(r ? (1-a)*len : 0, r ? len : a*len)};
-            };
-            
-            this._paper.customAttributes.followBezier = function(a) {
-                this.show();
-                var r =  this.data('reverse');
-                var len = this.data('pathLength');
-                var point = this.data('bezierPath').getPointAtLength(r ? len : a*len);
-                var radius = 0;
-                if(a > 0){
-                    radius = 5;
+                if(self._cb && self._cb.onAnimationEnd){
+                    self._cb.onAnimationEnd();
                 }
-    //             return {cx: point.x, cy: point.y, r:radius};
-                return {
-                    href:self.options.transition.icon.url, 
-                    x: point.x - self.options.transition.icon.anchor[0], 
-                    y: point.y - self.options.transition.icon.anchor[1], 
-                    width:self.options.transition.icon.size[0], 
-                    height: self.options.transition.icon.size[1]
-                };
-            };
-                
-            setTimeout(function(){
-                self._sub2.stop().animate({
-                    followBezier: 1
-                }, 
-                self.options.animationDuration, 
-                function() {
-                    self._sub2.hide();
-                });
-            
-                self._sub.stop().animate({
-                    alongBezier: 1
-                }, 
-                self.options.animationDuration, 
-                function() {
-                    self._sub.hide(); 
-                    self._path.attr(pathAttrFix);
-                    self._path.show();
-                    if(self._circleControls){
-                        self._circleControls.show();
-                    }
-                    if(self._cb && self._cb.onAnimationEnd){
-                        self._cb.onAnimationEnd();
-                    }
-                });
-            }, self.options.startAnimateTimeout);
-        }
+            });
+        }, self.options.startAnimateTimeout);
     },
     getControlPoint: function(start, end) {
         var cp = { x: 0, y: 0 };
