@@ -5,6 +5,8 @@ R.BezierAnim = R.Layer.extend({
         this._latlngs = latlngs;
         this._attr = attr;
         this._cb = cb;
+
+
     },
     _reset:function(){
         if(this._path) this._path.remove();
@@ -31,6 +33,31 @@ R.BezierAnim = R.Layer.extend({
         var pathAttrAnimated = {stroke: "blue", "stroke-width": 4, alongBezier:0};
         var pathAttrFix = {stroke: "blue", "stroke-width": 4, "stroke-linecap": "round", cursor:"pointer"};
         
+        this._paper.customAttributes.alongBezier = function(a) {
+            var r = this.data('reverse');
+            var len = this.data('pathLength');
+            if(a > 0)
+                return {path: this.data('bezierPath').getSubpath(r ? (1-a)*len : 0, r ? len : a*len)};
+        };
+        
+        this._paper.customAttributes.followBezier = function(a) {
+            this.show();
+            var r =  this.data('reverse');
+            var len = this.data('pathLength');
+            var point = this.data('bezierPath').getPointAtLength(r ? len : a*len);
+            var radius = 0;
+            if(a > 0){
+                radius = 5;
+            }
+            return {
+                href:self.options.transition.icon.url, 
+                x: point.x - self.options.transition.icon.anchor[0], 
+                y: point.y - self.options.transition.icon.anchor[1], 
+                width:self.options.transition.icon.size[0], 
+                height: self.options.transition.icon.size[1]
+            };
+        };
+
         function move(dx, dy) {
             this.update(dx - (this.dx || 0), dy - (this.dy || 0));
             this.dx = dx;
@@ -39,9 +66,11 @@ R.BezierAnim = R.Layer.extend({
         function up() {
             this.dx = this.dy = 0;
         }
+        
         if(self.options.editor){
             self._circleControls = self._paper.set();
         }
+
         var bezierNumber = self._latlngs.length / 4;
         for(var bezierID = 0; bezierID < bezierNumber; bezierID++){
             var start = self._map.latLngToLayerPoint(self._latlngs[bezierID*4]);
@@ -81,7 +110,7 @@ R.BezierAnim = R.Layer.extend({
 //                             self._cb.onDragPathControls(dataToSend);
 //                         }
 //                     });
-                pathWithControls.attr({stroke: "#ccc", "stroke-dasharray": "- "});
+                pathWithControls.attr({stroke: "#000", "stroke-dasharray": "- "});
                 
                 self._circleControls.push(
                     pathWithControls,
@@ -182,30 +211,7 @@ R.BezierAnim = R.Layer.extend({
         .attr(discattrFollow);
         self._markerAnimated.hide();
         
-        this._paper.customAttributes.alongBezier = function(a) {
-            var r = this.data('reverse');
-            var len = this.data('pathLength');
-            if(a > 0)
-                return {path: this.data('bezierPath').getSubpath(r ? (1-a)*len : 0, r ? len : a*len)};
-        };
-        
-        this._paper.customAttributes.followBezier = function(a) {
-            this.show();
-            var r =  this.data('reverse');
-            var len = this.data('pathLength');
-            var point = this.data('bezierPath').getPointAtLength(r ? len : a*len);
-            var radius = 0;
-            if(a > 0){
-                radius = 5;
-            }
-            return {
-                href:self.options.transition.icon.url, 
-                x: point.x - self.options.transition.icon.anchor[0], 
-                y: point.y - self.options.transition.icon.anchor[1], 
-                width:self.options.transition.icon.size[0], 
-                height: self.options.transition.icon.size[1]
-            };
-        };
+
             
         setTimeout(function(){
             self._markerAnimated.stop().animate({
@@ -225,6 +231,7 @@ R.BezierAnim = R.Layer.extend({
                 self._pathBezier.attr(pathAttrFix);
                 self._pathBezier.show();
                 if(self._circleControls){
+                    self._circleControls.toFront();
                     self._circleControls.show();
                 }
                 

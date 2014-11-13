@@ -4,20 +4,28 @@
         attribution: '',
         maxZoom: 18
     });
-
     var adelaide = new L.LatLng(-34.93027490891421, 138.603875041008);
-    var m = new R.Marker(adelaide);
-
     map.setView(adelaide, 13).addLayer(tiles);
-    map.addLayer(m);
 
-    setTimeout(function() {
-        map.removeLayer(m);
-    }, 5000);
+
+   // var m = new R.Marker(adelaide);
+   // map.addLayer(m);
+
+    var baseMaps = {};
+    var overlayMaps = {};
+    var myControls = L.control.layers(baseMaps, overlayMaps);
+    map.addControl(myControls);
 
     var points = [];
-
     var drag = false;
+    var bezierAnim = null;
+    var pulseArray = [];
+
+    var updateControls = function(){
+        map.removeControl(myControls);
+        myControls = L.control.layers(baseMaps, overlayMaps);
+        map.addControl(myControls);
+    };  
         
     map.on('click', function(e) {
         if(drag){
@@ -39,26 +47,25 @@
 // 
 //             points = [];
 //         }
-        var p = new R.Pulse( 
+        pulseArray.push(new R.Pulse( 
             e.latlng, 
             6,
             {'stroke': '#2478ad', 'fill': '#30a3ec'}, 
             {'stroke': '#30a3ec', 'stroke-width': 3}
-        );
-        map.addLayer(p);
+        ));
+        map.addLayer(pulseArray[pulseArray.length-1]);
         
         if(points.length >= 4){
-            var b = new R.BezierAnim(points, {}, 
+            if(bezierAnim){
+                map.removeLayer(bezierAnim);
+            }
+            bezierAnim = new R.BezierAnim(points, {}, 
                 {
                     onAnimationEnd: function(){
                         console.log("onAnimationEnd");
-                        var p = new R.Pulse( 
-                                e.latlng, 
-                                6,
-                                {'stroke': '#2478ad', 'fill': '#30a3ec'}, 
-                                {'stroke': '#30a3ec', 'stroke-width': 3}
-                        );
-                        map.addLayer(p);
+                        for(var i = 0; i < pulseArray.length; i++){
+                            map.removeLayer(pulseArray[i]);
+                        }
                     },
                     onHoverControls:function(){
                         drag = true;
@@ -78,13 +85,15 @@
                     editor:true
                 }
             );
-            map.addLayer(b);
+            map.addLayer(bezierAnim);
+            overlayMaps["BezierAnim"] = bezierAnim;
+            updateControls();
             points = [];
         }
         
     });
 
-    var geo = new R.GeoJSON(multi_geo);
+   /* var geo = new R.GeoJSON(multi_geo);
 
     map.addLayer(geo);
     geo.hover(
@@ -99,6 +108,6 @@
 
                 })}, 
             geo, 
-            geo);
+            geo);*/
 
 })();
