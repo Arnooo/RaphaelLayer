@@ -69,19 +69,23 @@
                     },
                     onHoverControls:function(){
                         drag = true;
+                    },
+                    onDragControls:function(data){
+                        console.log(data);
                     }
                 },
                 {
                     transition: {
-                        stopAt: 0.7,
+                        startAnimateTimeout: 0,
+                        animationDuration: 1000,
                         icon:{
                             url:"libs/leaflet/images/marker-icon.png",
                             size:[32, 51],
-                            anchor: [16, 51]
+                            anchor: [16, 51],
+                            hideOnStop: false,
+                            stopAt: 0.7
                         }
                     },
-                    startAnimateTimeout: 0,
-                    animationDuration: 1000,
                     editor:true
                 }
             );

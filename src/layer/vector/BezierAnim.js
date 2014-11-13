@@ -66,7 +66,7 @@ R.BezierAnim = R.Layer.extend({
         function up() {
             this.dx = this.dy = 0;
         }
-        
+
         if(self.options.editor){
             self._circleControls = self._paper.set();
         }
@@ -120,16 +120,31 @@ R.BezierAnim = R.Layer.extend({
                     self._paper.circle(end.x, end.y, 5).attr(discattr)
                 );
                 self._circleControls.hover(function(){
-                    console.log("HOVER IN");
                     self._map.dragging.disable();
                     
                     if(self._cb && self._cb.onHoverControls){
                         self._cb.onHoverControls();
                     }
                 },function(){
+
+                    var currentBezierID = this.data("bezierID");
                     self._map.dragging.enable();
                     if(self._cb && self._cb.onDragControls){
-                        var dataToSend = self.options.info;
+                        var dataToSend = {};
+                        if(self.options.info){
+                            dataToSend = self.options.info;
+                        }
+                        var arrayOfPoint = [
+                            [self._arrayBezier[currentBezierID*2+0][1], self._arrayBezier[currentBezierID*2+0][2]],
+                            [self._arrayBezier[currentBezierID*2+1][1], self._arrayBezier[currentBezierID*2+1][2]],
+                            [self._arrayBezier[currentBezierID*2+1][3], self._arrayBezier[currentBezierID*2+1][4]],
+                            [self._arrayBezier[currentBezierID*2+1][5], self._arrayBezier[currentBezierID*2+1][6]]
+                        ];
+                        dataToSend.latlngs = [];
+                        for(var i = 0; i < arrayOfPoint.length; i++){
+                            dataToSend.latlngs.push(self._map.layerPointToLatLng(arrayOfPoint[i]));
+                        }
+                        self._latlngs = dataToSend.latlngs;
                         self._cb.onDragControls(dataToSend);
                     }
                 });
@@ -204,28 +219,32 @@ R.BezierAnim = R.Layer.extend({
         .data('reverse', false)
         .attr(pathAttrAnimated);
         
-        self._markerAnimated = self._paper.image(self.options.transition.icon.url)
-        .data('bezierPath', self._pathBezier)
-        .data('pathLength', self._pathBezier.getTotalLength())
-        .data('reverse', false)
-        .attr(discattrFollow);
-        self._markerAnimated.hide();
-        
-
+        if(self.options.transition.icon){
+            self._markerAnimated = self._paper.image(self.options.transition.icon.url)
+            .data('bezierPath', self._pathBezier)
+            .data('pathLength', self._pathBezier.getTotalLength())
+            .data('reverse', false)
+            .attr(discattrFollow);
+            self._markerAnimated.hide();
+        }
             
         setTimeout(function(){
-            self._markerAnimated.stop().animate({
-                followBezier: self.options.transition.stopAt
-            }, 
-            self.options.animationDuration, 
-            function() {
-//                     self._markerAnimated.hide();
-            });
+            if(self._markerAnimated){
+                self._markerAnimated.stop().animate({
+                    followBezier: self.options.transition.icon.stopAt
+                }, 
+                self.options.transition.animationDuration, 
+                function() {
+                    if(self._markerAnimated && self.options.transition.icon.hideOnStop){
+                        self._markerAnimated.hide();    
+                    }    
+                });
+            }
         
             self._pathBezierAnimated.stop().animate({
                 alongBezier: 1
             }, 
-            self.options.animationDuration, 
+            self.options.transition.animationDuration, 
             function() {
                 self._pathBezierAnimated.hide(); 
                 self._pathBezier.attr(pathAttrFix);
@@ -239,7 +258,7 @@ R.BezierAnim = R.Layer.extend({
                     self._cb.onAnimationEnd();
                 }
             });
-        }, self.options.startAnimateTimeout);
+        }, self.options.transition.startAnimateTimeout);
     },
     getControlPoint: function(start, end) {
         var cp = { x: 0, y: 0 };
