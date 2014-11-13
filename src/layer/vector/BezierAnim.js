@@ -2,6 +2,7 @@ R.BezierAnim = R.Layer.extend({
     initialize: function(latlngs, attr, cb, options) {
         R.Layer.prototype.initialize.call(this, options);
 
+        console.log(latlngs[0]);
         this._latlngs = latlngs;
         this._attr = attr;
         this._cb = cb;
@@ -44,11 +45,11 @@ R.BezierAnim = R.Layer.extend({
             self._circleControls = self._paper.set();
             for(var bezierID = 0; bezierID < bezierNumber; bezierID++){
                 var start = self._map.latLngToLayerPoint(self._latlngs[bezierID*4]);
-                var controlOne = L.point(this._latlngs[1+bezierID*4]);
-                var controlTwo = L.point(this._latlngs[2+bezierID*4]);
+                var controlOne = self._map.latLngToLayerPoint(this._latlngs[1+bezierID*4]);
+                var controlTwo = self._map.latLngToLayerPoint(this._latlngs[2+bezierID*4]);
                 var end = self._map.latLngToLayerPoint(self._latlngs[3+bezierID*4]);
                 self._arrayBezier.push(["M", start.x, start.y]);
-                self._arrayBezier.push(["C", start.x+controlOne.x, start.y+controlOne.y, end.x+controlTwo.x, end.y+controlTwo.y, end.x, end.y]);
+                self._arrayBezier.push(["C", controlOne.x, controlOne.y, controlTwo.x, controlTwo.y, end.x, end.y]);
                 
 //                 pathWithControls.push(["M", start.x, start.y]);
 //                 pathWithControls.push(["L", start.x+controlOne.x, start.y+controlOne.y]);
@@ -57,8 +58,8 @@ R.BezierAnim = R.Layer.extend({
                 
                 var controls = [
                     ["M", start.x, start.y],
-                    ["L", start.x+controlOne.x, start.y+controlOne.y],
-                    ["M", end.x+controlTwo.x, end.y+controlTwo.y],
+                    ["L", controlOne.x, controlOne.y],
+                    ["M", controlTwo.x, controlTwo.y],
                     ["L", end.x, end.y]
                 ];
                 self._arrayWithControls.push(controls);
@@ -83,8 +84,8 @@ R.BezierAnim = R.Layer.extend({
                 self._circleControls.push(
                     pathWithControls,
                     self._paper.circle(start.x, start.y, 5).attr(discattr),
-                    self._paper.circle(start.x+controlOne.x, start.y+controlOne.y, 5).attr(discattr),
-                    self._paper.circle(end.x+controlTwo.x, end.y+controlTwo.y, 5).attr(discattr),
+                    self._paper.circle(controlOne.x, controlOne.y, 5).attr(discattr),
+                    self._paper.circle(controlTwo.x, controlTwo.y, 5).attr(discattr),
                     self._paper.circle(end.x, end.y, 5).attr(discattr)
                 );
                 self._circleControls.hover(function(){
@@ -217,13 +218,12 @@ R.BezierAnim = R.Layer.extend({
             }, self.options.startAnimateTimeout);
         }
         else{
-            var start = this._map.latLngToLayerPoint(this._latlngs[0]);
-            var controlOne = L.point(this._latlngs[1]);
-            var controlTwo = L.point(this._latlngs[2]);
-            var end = this._map.latLngToLayerPoint(this._latlngs[3]);
+            var start = self._map.latLngToLayerPoint(this._latlngs[0]);
+            var controlOne = self._map.latLngToLayerPoint(this._latlngs[1]);
+            var controlTwo = self._map.latLngToLayerPoint(this._latlngs[2]);
+            var end = self._map.latLngToLayerPoint(this._latlngs[3]);
             
-            
-            var x = start.x, y = start.y, ax = start.x + controlOne.x, ay = start.y + controlOne.y, bx = end.x + controlTwo.x, by = end.y + controlTwo.y, zx = end.x, zy = end.y;
+            var x = start.x, y = start.y, ax = controlOne.x, ay = controlOne.y, bx = controlTwo.x, by = controlTwo.y, zx = end.x, zy = end.y;
 
             var path = [["M", x, y], ["C", ax, ay, bx, by, zx, zy]];
             self.path2 = [["M", x, y], ["L", ax, ay], ["M", bx, by], ["L", zx, zy]];
@@ -371,6 +371,9 @@ R.BezierAnim = R.Layer.extend({
                     self._path.show();
                     if(self._circleControls){
                         self._circleControls.show();
+                    }
+                    if(self._cb && self._cb.onAnimationEnd){
+                        self._cb.onAnimationEnd();
                     }
                 });
             }, self.options.startAnimateTimeout);
