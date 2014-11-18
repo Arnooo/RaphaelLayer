@@ -76,7 +76,6 @@
                 },
                 {
                     transition: {
-                        startAnimateTimeout: 0,
                         animationDuration: 1000,
                         icon:{
                             url:"libs/leaflet/images/marker-icon.png",
@@ -86,6 +85,7 @@
                             stopAt: 0.7
                         }
                     },
+                    startAnimateTimeout: 0,
                     editor:true
                 }
             );

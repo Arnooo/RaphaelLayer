@@ -219,7 +219,9 @@ R.BezierAnim = R.Layer.extend({
         .data('reverse', false)
         .attr(pathAttrAnimated);
         
-        if(self.options.transition.icon){
+        if(self.options.transition.icon && 
+            self.options.transition.icon.url !== ""
+        ){
             self._markerAnimated = self._paper.image(self.options.transition.icon.url)
             .data('bezierPath', self._pathBezier)
             .data('pathLength', self._pathBezier.getTotalLength())
@@ -258,7 +260,7 @@ R.BezierAnim = R.Layer.extend({
                     self._cb.onAnimationEnd();
                 }
             });
-        }, self.options.transition.startAnimateTimeout);
+        }, self.options.startAnimateTimeout);
     },
     getControlPoint: function(start, end) {
         var cp = { x: 0, y: 0 };
