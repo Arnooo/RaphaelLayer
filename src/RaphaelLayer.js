@@ -15,4 +15,4 @@ if (typeof exports != 'undefined') {
 	window.R = R;
 }
 
-R.version = '0.2.0';
+R.version = '0.2.2';
