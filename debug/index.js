@@ -59,7 +59,7 @@
             if(bezierAnim){
                 map.removeLayer(bezierAnim);
             }
-            bezierAnim = new R.BezierAnim(points, {}, 
+            bezierAnim = new R.BezierAnim(points, {stroke: "red", "stroke-width": 1}, 
                 {
                     onAnimationEnd: function(){
                         console.log("onAnimationEnd");

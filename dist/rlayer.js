@@ -340,7 +340,12 @@ R.BezierAnim = R.Layer.extend({
         R.Layer.prototype.initialize.call(this, options);
 
         this._latlngs = latlngs;
-        this._attr = attr;
+        if(attr){
+            this._attr = attr;
+        }
+        else{
+            this._attr = {stroke: "blue", "stroke-width": 4}
+        }
         this._cb = cb;
 
 
@@ -367,8 +372,11 @@ R.BezierAnim = R.Layer.extend({
         self._reset();
         var discattr = {fill: "#fff", stroke: "#000", cursor:"pointer"};
         var discattrFollow = {fill: "#fff", stroke: "#000",  followBezier: 0};
-        var pathAttrAnimated = {stroke: "blue", "stroke-width": 4, alongBezier:0};
-        var pathAttrFix = {stroke: "blue", "stroke-width": 4, "stroke-linecap": "round", cursor:"pointer"};
+        var pathAttrAnimated = this._attr; 
+        pathAttrAnimated.alongBezier = 0;
+        var pathAttrFix = this._attr;
+        pathAttrFix["stroke-linecap"] = "round";
+        pathAttrFix.cursor="pointer";
         
         this._paper.customAttributes.alongBezier = function(a) {
             var r = this.data('reverse');
@@ -386,7 +394,6 @@ R.BezierAnim = R.Layer.extend({
             if(a > 0){
                 radius = 5;
             }
-            
             return {
                 href:self.options.transition.icon.url, 
                 x: point.x - self.options.transition.icon.anchor[0], 
