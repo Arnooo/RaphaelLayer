@@ -471,6 +471,7 @@ R.BezierAnim = R.Layer.extend({
                 },function(){
 
                     var currentBezierID = this.data("bezierID");
+                    var currentPointID = this.data("pointID");
                     self._map.dragging.enable();
                     if(self._cb && self._cb.onDragControls){
                         var dataToSend = {};
@@ -487,6 +488,7 @@ R.BezierAnim = R.Layer.extend({
                         for(var i = 0; i < arrayOfPoint.length; i++){
                             dataToSend.latlngs.push(self._map.layerPointToLatLng(arrayOfPoint[i]));
                         }
+                        dataToSend.currentPointID = currentPointID;
                         self._latlngs = dataToSend.latlngs;
                         self._cb.onDragControls(dataToSend);
                     }
@@ -503,6 +505,7 @@ R.BezierAnim = R.Layer.extend({
                             self._circleControls[currentBezierID*5+2].update(x, y);
                 };
                 self._circleControls[bezierID*5+1].data("bezierID", bezierID);
+                self._circleControls[bezierID*5+1].data("pointID", 1);
                 self._circleControls[bezierID*5+2].update = function (x, y) {
                     var X = this.attr("cx") + x,
                             Y = this.attr("cy") + y;
@@ -516,6 +519,7 @@ R.BezierAnim = R.Layer.extend({
                             self._circleControls[currentBezierID*5+0].attr({path: self._arrayWithControls[currentBezierID]});
                 };
                 self._circleControls[bezierID*5+2].data("bezierID", bezierID);
+                self._circleControls[bezierID*5+2].data("pointID", 2);
                 self._circleControls[bezierID*5+3].update = function (x, y) {
                     var X = this.attr("cx") + x,
                             Y = this.attr("cy") + y;
@@ -529,6 +533,7 @@ R.BezierAnim = R.Layer.extend({
                             self._circleControls[currentBezierID*5+0].attr({path: self._arrayWithControls[currentBezierID]});
                 };
                 self._circleControls[bezierID*5+3].data("bezierID", bezierID);
+                self._circleControls[bezierID*5+3].data("pointID", 3);
                 self._circleControls[bezierID*5+4].update = function (x, y) {
                     var X = this.attr("cx") + x,
                             Y = this.attr("cy") + y;
@@ -541,6 +546,7 @@ R.BezierAnim = R.Layer.extend({
                             self._circleControls[currentBezierID*5+3].update(x, y);
                 };
                 self._circleControls[bezierID*5+4].data("bezierID", bezierID);
+                self._circleControls[bezierID*5+4].data("pointID", 4);
             }
         }
         
