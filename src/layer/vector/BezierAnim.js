@@ -52,7 +52,6 @@ R.BezierAnim = R.Layer.extend({
             this.show();
             var r =  this.data('reverse');
             var len = this.data('pathLength');
-            console.log("a = "+a+" len= "+len+" r= "+r);
             var point = this.data('bezierPath').getPointAtLength(r ? len : a*len);
             if(point && a > 0){                
                 return {
