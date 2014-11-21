@@ -59,6 +59,26 @@
             if(bezierAnim){
                 map.removeLayer(bezierAnim);
             }
+            var iconArray = [];
+            
+            iconArray.push({
+                latlng:points[0],
+                icon:{
+                    url:"libs/leaflet/images/marker-icon.png",
+                    size:[32, 51],
+                    anchor: [16, 51]
+                }
+            });
+            for(var i = 0; i < points.length/4; i++){
+                iconArray.push({
+                    latlng:points[3+i*4],
+                    icon:{
+                        url:"libs/leaflet/images/marker-icon.png",
+                        size:[32, 51],
+                        anchor: [16, 51]
+                    }
+                });
+            }
             bezierAnim = new R.BezierAnim(points, {stroke: "red", "stroke-width": 1}, 
                 {
                     onAnimationEnd: function(){
@@ -85,6 +105,7 @@
                             stopAt: 0.7
                         }
                     },
+                    markers:iconArray,
                     startAnimateTimeout: 0,
                     editor:true
                 }
@@ -92,7 +113,7 @@
             map.addLayer(bezierAnim);
             overlayMaps["BezierAnim"] = bezierAnim;
             updateControls();
-            points = [];
+//             points = [];
         }
         
     });

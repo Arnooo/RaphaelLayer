@@ -22,6 +22,7 @@ R.BezierAnim = R.Layer.extend({
         if(this._pathBezierAnimated) this._pathBezierAnimated.remove();
         if(this._markerAnimated) this._markerAnimated.remove();
         if(this._circleControls) this._circleControls.remove();
+        if(this._markers) this._markers.remove();
         
         this._arrayWithControls = [];
         this._arrayBezier = [];
@@ -63,6 +64,21 @@ R.BezierAnim = R.Layer.extend({
                 };
             }
         };
+        
+        function pushMarkersInSet(markerID){
+            if(self._markers && 
+                self.options.markers && 
+                self.options.markers[markerID]){
+                var point = self._map.latLngToLayerPoint(self.options.markers[markerID].latlng);
+                self._markers.push(
+                    self._paper.image(self.options.markers[markerID].icon.url, 
+                                      point.x - self.options.markers[markerID].icon.anchor[0], 
+                                      point.y - self.options.markers[markerID].icon.anchor[1], 
+                                      self.options.markers[markerID].icon.size[0], 
+                                      self.options.markers[markerID].icon.size[1]).hide()
+                );
+            }
+        }
 
         function move(dx, dy) {
             this.update(dx - (this.dx || 0), dy - (this.dy || 0));
@@ -75,6 +91,11 @@ R.BezierAnim = R.Layer.extend({
 
         if(self.options.editor){
             self._circleControls = self._paper.set();
+        }
+        self._markers = self._paper.set();
+        pushMarkersInSet(0);
+        if(self._markers[0]){
+            self._markers[0].show();
         }
 
         var bezierNumber = self._latlngs.length / 4;
@@ -91,6 +112,7 @@ R.BezierAnim = R.Layer.extend({
 //                 pathWithControls.push(["M", end.x+controlTwo.x, end.y+controlTwo.y]);
 //                 pathWithControls.push(["L", end.x, end.y]);
             
+            pushMarkersInSet(bezierID+1);
             
             if(self._circleControls){
                 var controls = [
@@ -210,6 +232,8 @@ R.BezierAnim = R.Layer.extend({
                 };
                 self._circleControls[bezierID*5+4].data("bezierID", bezierID);
                 self._circleControls[bezierID*5+4].data("pointID", 4);
+                
+                
             }
         }
         
@@ -259,6 +283,10 @@ R.BezierAnim = R.Layer.extend({
             
             if(self._cb && self._cb.onAnimationEnd){
                 self._cb.onAnimationEnd();
+            }
+            
+            if(self._markers){
+                self._markers.show();
             }
         };
         if(!self._enableAnimation){
