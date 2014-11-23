@@ -17,8 +17,8 @@
     map.addControl(myControls);
 
     var points = [];
+    var controlsArray = [];
     var drag = false;
-    var bezierAnim = null;
     var pulseArray = [];
 
     var updateControls = function(){
@@ -47,39 +47,68 @@
 // 
 //             points = [];
 //         }
-        pulseArray.push(new R.Pulse( 
+   /*     pulseArray.push(new R.Pulse( 
             e.latlng, 
             6,
             {'stroke': '#2478ad', 'fill': '#30a3ec'}, 
             {'stroke': '#30a3ec', 'stroke-width': 3}
         ));
-        map.addLayer(pulseArray[pulseArray.length-1]);
+        map.addLayer(pulseArray[pulseArray.length-1]);*/
         
-        if(points.length >= 4){
-            if(bezierAnim){
-                map.removeLayer(bezierAnim);
+        if(points.length >= 1){
+
+            if(overlayMaps["BezierAnim"]){
+                map.removeLayer(overlayMaps["BezierAnim"]);
             }
-            var iconArray = [];
-            
-            iconArray.push({
-                latlng:points[0],
-                icon:{
-                    url:"libs/leaflet/images/marker-icon.png",
-                    size:[32, 51],
-                    anchor: [16, 51]
+            var iconsArray = [];
+            var bezierPoints = [];
+            var infosArray = [];
+            var addPoint = function(point, info, useIcon){
+                bezierPoints.push(point);
+                infosArray.push(info);
+                if(useIcon){
+                    iconsArray.push({
+                        latlng:point,
+                        icon:{
+                            url:"libs/leaflet/images/marker-icon.png",
+                            size:[32, 51],
+                            anchor: [16, 51]
+                        }
+                    });
                 }
-            });
-            for(var i = 0; i < points.length/4; i++){
-                iconArray.push({
-                    latlng:points[3+i*4],
-                    icon:{
-                        url:"libs/leaflet/images/marker-icon.png",
-                        size:[32, 51],
-                        anchor: [16, 51]
-                    }
-                });
+                else{
+                    iconsArray.push({
+                        latlng:point
+                    });
+                }
+            };
+
+            addPoint(points[0], {tileID:0}, true);
+            for(var i = 1; i < points.length; i++){
+                //Compute controls points
+                var firstControl = Object.create(points[i-1]);
+                var secondControl = Object.create(points[i]);
+                var offset = {
+                    lat: (secondControl.lat - firstControl.lat) / 4.0,
+                    lng: (secondControl.lng - firstControl.lng) / 2.0
+                };
+                firstControl.lat += Math.abs(offset.lat);
+                firstControl.lng += Math.abs(offset.lng);
+                secondControl.lat -= Math.abs(offset.lat);
+                secondControl.lng -= Math.abs(offset.lng);
+
+                //Push points in order
+                if(i - 1 < controlsArray.length){
+                    addPoint(controlsArray[i-1], {controlID:i-1}, false);
+                }
+                else{
+                    controlsArray.push(secondControl);
+                    addPoint(secondControl, {controlID:i-1}, false);
+                }
+                addPoint(points[i], {tileID:i}, true);
             }
-            bezierAnim = new R.BezierAnim(points, {stroke: "red", "stroke-width": 1}, 
+
+            var bezierAnim = new R.BezierAnim(bezierPoints, {stroke: "red", "stroke-width": 4}, 
                 {
                     onAnimationEnd: function(){
                         console.log("onAnimationEnd");
@@ -90,8 +119,23 @@
                     onHoverControls:function(){
                         drag = true;
                     },
+                    onClickMarker:function(data){
+                        console.log(data)
+                    },
+                    onClickPath:function(data){
+                        console.log(data)
+                    },
                     onDragControls:function(data){
-                        console.log(data);
+                        if(data.info){
+                            if(data.info.tileID >= 0 ){
+                                points[data.info.tileID].lat = data.latlng.lat;
+                                points[data.info.tileID].lng = data.latlng.lng;
+                            }
+                            else if(data.info.controlID >= 0){
+                                controlsArray[data.info.controlID].lat = data.latlng.lat;
+                                controlsArray[data.info.controlID].lng = data.latlng.lng;
+                            }
+                        }
                     }
                 },
                 {
@@ -105,17 +149,17 @@
                             stopAt: 0.7
                         }
                     },
-                    markers:iconArray,
+                    markers:iconsArray,
+                    markersInfos:infosArray,
+                    pathInfo:{storyID:0},
                     startAnimateTimeout: 0,
-                    editor:true
+                    editor: false
                 }
             );
             map.addLayer(bezierAnim);
             overlayMaps["BezierAnim"] = bezierAnim;
             updateControls();
-//             points = [];
         }
-        
     });
 
    /* var geo = new R.GeoJSON(multi_geo);
