@@ -297,7 +297,7 @@ R.BezierAnim = R.Layer.extend({
                 var r =  this.data('reverse');
                 var len = this.data('pathLength');
                 var point = this.data('bezierPath').getPointAtLength(r ? len : a*len);
-                if(point && a > 0){                
+                if(!isNaN(point.x) && a > 0){                
                     return {
                         href:self.options.transition.icon.url, 
                         x: point.x - self.options.transition.icon.anchor[0], 

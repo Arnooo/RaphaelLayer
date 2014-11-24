@@ -2,7 +2,7 @@
  RaphaelLayer, a JavaScript library for overlaying Raphael objects onto Leaflet interactive maps. http://dynmeth.github.com/RaphaelLayer
  (c) 2012-2013, David Howell, Dynamic Methods Pty Ltd
 
- Version 0.2.2
+ Version 0.3.0
 
  Fork by Arnooo: https://github.com/Arnooo/RaphaelLayer
 
@@ -27,7 +27,7 @@ if (typeof exports != 'undefined') {
 	window.R = R;
 }
 
-R.version = '0.2.2';
+R.version = '0.3.0';
 
 R.Layer = L.Class.extend({
     includes: L.Mixin.Events,
@@ -634,7 +634,7 @@ R.BezierAnim = R.Layer.extend({
                 var r =  this.data('reverse');
                 var len = this.data('pathLength');
                 var point = this.data('bezierPath').getPointAtLength(r ? len : a*len);
-                if(point && a > 0){                
+                if(!isNaN(point.x) && a > 0){                
                     return {
                         href:self.options.transition.icon.url, 
                         x: point.x - self.options.transition.icon.anchor[0], 
