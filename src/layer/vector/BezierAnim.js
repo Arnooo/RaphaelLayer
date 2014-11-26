@@ -308,7 +308,7 @@ R.BezierAnim = R.Layer.extend({
                 var point = this.data('bezierPath').getPointAtLength(r ? len : a*len);
                 if(!isNaN(point.x) && a > 0){                
                     return {
-                        href:self.options.transition.icon.url, 
+//                         href:self.options.transition.icon.url, 
                         x: point.x - self.options.transition.icon.anchor[0], 
                         y: point.y - self.options.transition.icon.anchor[1], 
                         width:self.options.transition.icon.size[0], 
@@ -322,12 +322,23 @@ R.BezierAnim = R.Layer.extend({
             .data('pathLength', self._pathBezier.getTotalLength())
             .data('reverse', false)
             .attr({fill: "#fff", stroke: "#000", followBezier: 0});
+            
+            self._markerAnimated.click(function(){
+                if(self._cb && self._cb.onClickMarker && self.options.pathInfo){
+                    self._cb.onClickMarker(self.options.pathInfo);
+                }
+            });
+            
             self._markerAnimated.hide();
             
             var endAnimMarkerCallback = function() {
                 self._markerAnimated.attr({followBezier: self.options.transition.icon.stopAt});
                 if(self._markerAnimated && self.options.transition.icon.hideOnStop){
                     self._markerAnimated.hide();    
+                }
+                else{
+                    self._markerAnimated.attr({cursor: "pointer"});
+                    
                 }    
             };
             
