@@ -242,22 +242,11 @@ R.BezierAnim = R.Layer.extend({
     },
     _addAnimatedPath: function(){
         var self = this;
-        this._paper.customAttributes.alongBezier = function(a) {
-            var r = this.data('reverse');
-            var len = this.data('pathLength');
-            if(a > 0)
-                return {path: this.data('bezierPath').getSubpath(r ? (1-a)*len : 0, r ? len : a*len)};
-        };
-
-        self._pathBezierAnimated = self._paper.path()
-        .data('bezierPath', self._pathBezier)
-        .data('pathLength', self._pathBezier.getTotalLength())
-        .data('reverse', false)
-        .attr(self._attr)
-        .attr({alongBezier:0});
-
+        
         var endAnimPathCallback = function() {
-            self._pathBezierAnimated.hide(); 
+            if(self._pathBezierAnimated){
+                self._pathBezierAnimated.hide(); 
+            }
             self._pathBezier.show();
             if(self._circleControls){
                 self._circleControls.toFront();
@@ -272,24 +261,44 @@ R.BezierAnim = R.Layer.extend({
                 self._markers.show();
             }
         };
+        if(self.options.transition){
+            this._paper.customAttributes.alongBezier = function(a) {
+                var r = this.data('reverse');
+                var len = this.data('pathLength');
+                if(a > 0){
+                   return {path: this.data('bezierPath').getSubpath(r ? (1-a)*len : 0, r ? len : a*len)};
+                }
+            };
 
-        if(!self._enablePathAnimation){
-            endAnimPathCallback();
+            self._pathBezierAnimated = self._paper.path()
+            .data('bezierPath', self._pathBezier)
+            .data('pathLength', self._pathBezier.getTotalLength())
+            .data('reverse', false)
+            .attr(self._attr)
+            .attr({alongBezier:1});
+
+            if(!self._enablePathAnimation){
+                endAnimPathCallback();
+            }
+            else{
+                self._enablePathAnimation = false;
+                setTimeout(function(){
+                    self._pathBezierAnimated.stop().animate({
+                        alongBezier: 1
+                    }, 
+                    self.options.transition.animationDuration, 
+                    endAnimPathCallback);
+                }, self.options.startAnimateTimeout);
+            }
         }
         else{
-            self._enablePathAnimation = false;
-            setTimeout(function(){
-                self._pathBezierAnimated.stop().animate({
-                    alongBezier: 1
-                }, 
-                self.options.transition.animationDuration, 
-                endAnimPathCallback);
-            }, self.options.startAnimateTimeout);
+            endAnimPathCallback();
         }
     },
     _addAnimatedMarker: function(){
         var self = this;
-        if(self.options.transition.icon && 
+        if(self.options.transition &&
+            self.options.transition.icon && 
             self.options.transition.icon.url !== ""
         ){
             this._paper.customAttributes.followBezier = function(a) {
