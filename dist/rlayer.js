@@ -2,7 +2,7 @@
  RaphaelLayer, a JavaScript library for overlaying Raphael objects onto Leaflet interactive maps. http://dynmeth.github.com/RaphaelLayer
  (c) 2012-2013, David Howell, Dynamic Methods Pty Ltd
 
- Version 0.3.0
+ Version 0.3.1
 
  Fork by Arnooo: https://github.com/Arnooo/RaphaelLayer
 
@@ -27,7 +27,7 @@ if (typeof exports != 'undefined') {
 	window.R = R;
 }
 
-R.version = '0.3.0';
+R.version = '0.3.1';
 
 R.Layer = L.Class.extend({
     includes: L.Mixin.Events,
@@ -360,8 +360,10 @@ R.BezierAnim = R.Layer.extend({
         if(this._setMarkers) this._setMarkers.remove();
         if(this._pathBezierAnimated) this._pathBezierAnimated.remove();
         if(this._markerAnimated) this._markerAnimated.remove();
+        if(this._pathBezierFixed) this._pathBezierFixed.remove();
         this._arrayBezier = [];
         this._arrayControls = [];
+        this._startNormalized = 0;
     },
     onRemove: function (map) {
         R.Layer.prototype.onRemove.call(this, map);
@@ -392,6 +394,11 @@ R.BezierAnim = R.Layer.extend({
             }
             //Convert array to path 
             self._pathBezier = self._paper.path(self._arrayBezier).hide();
+            if(self.options.renderLastOnly && self._arrayBezier.length > 2){
+                self._pathBezierFixed = self._paper.path(self._arrayBezier.slice(0, self._arrayBezier.length - 3));
+                self._pathBezierFixed.attr(self._attr);
+                self._startNormalized = self._pathBezierFixed.getTotalLength() / self._pathBezier.getTotalLength();
+            }
             self._pathControls = self._paper.path(self._arrayControls);
             self._setControls.push(self._pathControls);
 
@@ -603,16 +610,15 @@ R.BezierAnim = R.Layer.extend({
                 var r = this.data('reverse');
                 var len = this.data('pathLength');
                 if(a > 0){
-                   return {path: this.data('bezierPath').getSubpath(r ? (1-a)*len : 0, r ? len : a*len)};
+                    return {path: this.data('bezierPath').getSubpath(r ? (1-a)*len : 0, r ? len : a*len)};
                 }
             };
-
             self._pathBezierAnimated = self._paper.path()
             .data('bezierPath', self._pathBezier)
             .data('pathLength', self._pathBezier.getTotalLength())
             .data('reverse', false)
             .attr(self._attr)
-            .attr({alongBezier:1});
+            .attr({alongBezier:self._startNormalized});
 
             if(!self._enablePathAnimation){
                 endAnimPathCallback();
@@ -658,7 +664,7 @@ R.BezierAnim = R.Layer.extend({
             .data('bezierPath', self._pathBezier)
             .data('pathLength', self._pathBezier.getTotalLength())
             .data('reverse', false)
-            .attr({fill: "#fff", stroke: "#000", followBezier: 0});
+            .attr({fill: "#fff", stroke: "#000", followBezier: self._startNormalized});
             
             self._markerAnimated.click(function(){
                 if(self._cb && self._cb.onClickMarker && self.options.pathInfo){

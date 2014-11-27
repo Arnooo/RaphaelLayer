@@ -56,7 +56,8 @@
                 markersInfos:infosArray,
                 pathInfo:{storyID:0},
                 startAnimateTimeout: 0,
-                editor: false
+                editor: false,
+                renderLastOnly: true
             }
         );
         map.addLayer(bezierAnim);
