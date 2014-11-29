@@ -591,6 +591,9 @@ R.BezierAnim = R.Layer.extend({
             if(self._pathBezierAnimated){
                 self._pathBezierAnimated.hide(); 
             }
+            if(self._pathBezierFixed){
+                self._pathBezierFixed.hide();
+            }
             self._pathBezier.show();
             if(self._circleControls){
                 self._circleControls.toFront();

@@ -56,7 +56,7 @@
                 markersInfos:infosArray,
                 pathInfo:{storyID:0},
                 startAnimateTimeout: 0,
-                editor: false,
+                editor: true,
                 renderLastOnly: true
             }
         );
