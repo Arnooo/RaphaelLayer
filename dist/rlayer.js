@@ -2,7 +2,7 @@
  RaphaelLayer, a JavaScript library for overlaying Raphael objects onto Leaflet interactive maps. http://dynmeth.github.com/RaphaelLayer
  (c) 2012-2013, David Howell, Dynamic Methods Pty Ltd
 
- Version 0.3.1
+ Version 0.3.2
 
  Fork by Arnooo: https://github.com/Arnooo/RaphaelLayer
 
@@ -27,7 +27,7 @@ if (typeof exports != 'undefined') {
 	window.R = R;
 }
 
-R.version = '0.3.1';
+R.version = '0.3.2';
 
 R.Layer = L.Class.extend({
     includes: L.Mixin.Events,
@@ -427,15 +427,16 @@ R.BezierAnim = R.Layer.extend({
                     self._dataToSend.info = this.data("info");
                     var cicleX = this.attr("cx");
                     var cicleY = this.attr("cy");
+                    var currentPointID = this.data("pointID");
                     if(cicleX && cicleY){
                         //nothing to do
                     }
                     else{
-                        var currentPointID = this.data("pointID");
                         cicleX = self._setControls[currentPointID].attr("cx");
                         cicleY = self._setControls[currentPointID].attr("cy");
                     }
                     self._dataToSend.latlng = self._map.layerPointToLatLng([cicleX, cicleY]);
+                    self._updateLatlngs(currentPointID, self._dataToSend.latlng);
                 }
             };
             function up() {
@@ -476,6 +477,13 @@ R.BezierAnim = R.Layer.extend({
 
           //  console.log(self._arrayBezier); 
           //  console.log(self._arrayControls); 
+        }
+    },
+    _updateLatlngs:function(pointID, newLatlng){
+        var self = this;
+        if(pointID < self._latlngs.length){
+            self._latlngs[pointID] = newLatlng;
+            self.options.markers[pointID].latlng = newLatlng;
         }
     },
     _addControlPoint:function(pointID, currentPoint){

@@ -90,15 +90,16 @@ R.BezierAnim = R.Layer.extend({
                     self._dataToSend.info = this.data("info");
                     var cicleX = this.attr("cx");
                     var cicleY = this.attr("cy");
+                    var currentPointID = this.data("pointID");
                     if(cicleX && cicleY){
                         //nothing to do
                     }
                     else{
-                        var currentPointID = this.data("pointID");
                         cicleX = self._setControls[currentPointID].attr("cx");
                         cicleY = self._setControls[currentPointID].attr("cy");
                     }
                     self._dataToSend.latlng = self._map.layerPointToLatLng([cicleX, cicleY]);
+                    self._updateLatlngs(currentPointID, self._dataToSend.latlng);
                 }
             };
             function up() {
@@ -139,6 +140,13 @@ R.BezierAnim = R.Layer.extend({
 
           //  console.log(self._arrayBezier); 
           //  console.log(self._arrayControls); 
+        }
+    },
+    _updateLatlngs:function(pointID, newLatlng){
+        var self = this;
+        if(pointID < self._latlngs.length){
+            self._latlngs[pointID] = newLatlng;
+            self.options.markers[pointID].latlng = newLatlng;
         }
     },
     _addControlPoint:function(pointID, currentPoint){
