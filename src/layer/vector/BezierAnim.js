@@ -43,17 +43,25 @@ R.BezierAnim = R.Layer.extend({
 
             //Parse all points
             for(var pointID = 0; pointID < self._latlngs.length; pointID++){
+                var symetricPoint = false;
                 var currentPoint = self._map.latLngToLayerPoint(self._latlngs[pointID]);
                 if(pointID === 0){
                     self._arrayBezier.push("M");
                 }
                 else if(pointID > 0 && pointID%2 === 1) {
                     self._arrayBezier.push("S"); 
-                }  
+                }
+                else if(pointID > 1){ 
+                    var previousPoint = self._arrayBezier[self._arrayBezier.length - 1];
+                    var tmp = currentPoint.subtract(previousPoint);
+                    symetricPoint = currentPoint.add(tmp);
+                }
                 self._arrayBezier.push([currentPoint.x, currentPoint.y]);
-
-                self._addControlPoint(pointID, currentPoint); 
-                self._addMarker(pointID);               
+                var controlID = self._addControlPoint(pointID, currentPoint); 
+                self._addMarker(pointID, controlID);               
+                if(symetricPoint){
+                    self._addControlPoint(pointID - 1, symetricPoint); 
+                }
             }
             //Convert array to path 
             self._pathBezier = self._paper.path(self._arrayBezier).hide();
@@ -85,18 +93,23 @@ R.BezierAnim = R.Layer.extend({
             function move(dx, dy) {
                 if(this.update){
                     this.update(dx - (this.dx || 0), dy - (this.dy || 0));
-                    this.dx = dx;
+                    this.dx = dx; 
                     this.dy = dy;
                     self._dataToSend.info = this.data("info");
                     var cicleX = this.attr("cx");
                     var cicleY = this.attr("cy");
+                    var currentControlID = this.data("controlID");
                     var currentPointID = this.data("pointID");
-                    if(cicleX && cicleY){
+                    if(currentPointID > 0 && (currentControlID) % 3 === 0){ 
+                        cicleX = self._setControls[currentControlID-2].attr("cx");
+                        cicleY = self._setControls[currentControlID-2].attr("cy");
+                    }
+                    else if(cicleX && cicleY){
                         //nothing to do
                     }
                     else{
-                        cicleX = self._setControls[currentPointID].attr("cx");
-                        cicleY = self._setControls[currentPointID].attr("cy");
+                        cicleX = self._setControls[currentControlID].attr("cx");
+                        cicleY = self._setControls[currentControlID].attr("cy");
                     }
                     self._dataToSend.latlng = self._map.layerPointToLatLng([cicleX, cicleY]);
                     self._updateLatlngs(currentPointID, self._dataToSend.latlng);
@@ -137,9 +150,6 @@ R.BezierAnim = R.Layer.extend({
 
             self._addAnimatedPath();
             self._addAnimatedMarker();
-
-          //  console.log(self._arrayBezier); 
-          //  console.log(self._arrayControls); 
         }
     },
     _updateLatlngs:function(pointID, newLatlng){
@@ -151,15 +161,9 @@ R.BezierAnim = R.Layer.extend({
     },
     _addControlPoint:function(pointID, currentPoint){
         var self = this;
-        var circleElement = self._paper.circle(currentPoint.x, currentPoint.y, 5).attr({fill: "#fff", stroke: "#000", cursor:"pointer"});
-        circleElement.data("pointID", pointID);
-        if(self.options.markersInfos){
-            circleElement.data("info", self.options.markersInfos[pointID]);
-        }
-        self._setControls.push(circleElement);
-
+        var controlID = self._setControls.length;
         if(pointID > 0){
-            if(pointID%2 === 1){
+            if(self._arrayControls.length % 3 === 0){
                 self._arrayControls.push("M");
             }
             else{
@@ -167,6 +171,13 @@ R.BezierAnim = R.Layer.extend({
             }
             self._arrayControls.push([currentPoint.x, currentPoint.y]); 
         }
+        var circleElement = self._paper.circle(currentPoint.x, currentPoint.y, 5).attr({fill: "#fff", stroke: "#000", cursor:"pointer"});
+        circleElement.data("pointID", pointID);
+        circleElement.data("controlID", controlID);
+        if(self.options.markersInfos){
+            circleElement.data("info", self.options.markersInfos[pointID]);
+        }
+        self._setControls.push(circleElement);
 
         if(pointID === 0){
             circleElement.update = function (x, y) {
@@ -181,43 +192,99 @@ R.BezierAnim = R.Layer.extend({
                 self._setMarkers[currentPointID].attr({x: markerPosX, y: markerPosY});
                 self._pathBezier.attr({path: self._arrayBezier});
             }; 
-        }
-        else if(pointID > 0 && pointID%2 === 0){
-            circleElement.update = function (x, y) {
-                var X = this.attr("cx") + x,
-                    Y = this.attr("cy") + y;
-                this.attr({cx: X, cy: Y});
-                var currentPointID = this.data("pointID");
-                var index = 1 + Math.floor(currentPointID/2) * 3;
-                var indexControl = currentPointID*2 - 1;
-                self._arrayBezier[index][0] = X;
-                self._arrayBezier[index][1] = Y;
-                self._arrayControls[indexControl][0] = X;
-                self._arrayControls[indexControl][1] = Y;
-                var markerPosX = self._setMarkers[currentPointID].attr("x") + x;
-                var markerPosY = self._setMarkers[currentPointID].attr("y") + y;
-                self._setMarkers[currentPointID].attr({x: markerPosX, y: markerPosY});
-                self._setControls[currentPointID - 1].update(x, y);
-            }; 
-        }
-        else if(pointID > 0 && pointID%2 === 1){
+        } 
+        else if(pointID > 0 && (self._arrayControls.length - 1) % 3 === 1){
+            
+            //MAIN BEZIER CONTROL!!!
             circleElement.update = function (x, y) {
                 var X = this.attr("cx") + x,
                     Y = this.attr("cy") + y;
                 this.attr({cx: X, cy: Y});
                 var currentPointID = this.data("pointID");
                 var index = Math.floor((currentPointID+1)/2) * 3;
-                var indexControl = currentPointID*2 - 1;
                 self._arrayBezier[index][0] = X;
                 self._arrayBezier[index][1] = Y;
-                self._arrayControls[indexControl][0] = X;
-                self._arrayControls[indexControl][1] = Y;
+                self._pathBezier.attr({path: self._arrayBezier});
+                
+                var currentControlID = this.data("controlID");
+                self._arrayControls[currentControlID * 2 -1][0] = X;
+                self._arrayControls[currentControlID * 2 -1][1] = Y;
                 self._pathControls.attr({path: self._arrayControls});
+                
+                self._setControls[currentControlID + 2].updatePosition(-x, -y);
+            }; 
+            
+            circleElement.updatePosition = function (x, y) {
+                var X = this.attr("cx") + x,
+                    Y = this.attr("cy") + y;
+                this.attr({cx: X, cy: Y});
+                var currentControlID = this.data("controlID");
+                self._arrayControls[currentControlID * 2 -1][0] = X;
+                self._arrayControls[currentControlID * 2 -1][1] = Y;
+                self._pathControls.attr({path: self._arrayControls});
+                
+                var currentPointID = this.data("pointID");
+                var index = Math.floor((currentPointID+1)/2) * 3;
+                self._arrayBezier[index][0] = X;
+                self._arrayBezier[index][1] = Y;
                 self._pathBezier.attr({path: self._arrayBezier});
             }; 
         }
+        else if(pointID > 0 && self._arrayControls.length % 3 === 0){
+            //SYMETRIC CONTROL!!!
+            circleElement.update = function (x, y) {
+                var X = this.attr("cx") + x,
+                    Y = this.attr("cy") + y;
+                this.attr({cx: X, cy: Y}); 
+                var currentPointID = this.data("pointID");
+                var currentControlID = this.data("controlID");
+                var index = Math.floor((currentPointID+1)/2) * 3;
+                self._pathBezier.attr({path: self._arrayBezier});
+                
+                self._arrayControls[currentControlID * 2 -1][0] = X;
+                self._arrayControls[currentControlID * 2 -1][1] = Y;
+                self._pathControls.attr({path: self._arrayControls});
+                
+                self._setControls[currentControlID - 2].updatePosition(-x, -y);
+            }; 
+            
+            circleElement.updatePosition = function (x, y) {
+                var X = this.attr("cx") + x,
+                    Y = this.attr("cy") + y;
+                this.attr({cx: X, cy: Y});
+                var currentControlID = this.data("controlID");
+                var currentPointID = this.data("pointID");
+                var index = Math.floor((currentPointID+1)/2) * 3;
+                self._arrayControls[currentControlID * 2 -1][0] = X;
+                self._arrayControls[currentControlID * 2 -1][1] = Y;
+                self._pathControls.attr({path: self._arrayControls});
+            }; 
+        }
+        else if(pointID > 0 && (self._arrayControls.length - 1) % 3 === 0){
+            //PATH CONTROL!!!
+            circleElement.update = function (x, y) {
+                var X = this.attr("cx") + x,
+                    Y = this.attr("cy") + y;
+                this.attr({cx: X, cy: Y});
+                var currentPointID = this.data("pointID");
+                var currentControlID = this.data("controlID");
+                var index = 1 + Math.floor(currentPointID/2) * 3;
+                self._arrayBezier[index][0] = X; 
+                self._arrayBezier[index][1] = Y;
+                
+                var markerPosX = self._setMarkers[currentPointID].attr("x") + x;
+                var markerPosY = self._setMarkers[currentPointID].attr("y") + y;
+                self._setMarkers[currentPointID].attr({x: markerPosX, y: markerPosY});
+
+                self._arrayControls[currentControlID * 2 -1][0] = X;
+                self._arrayControls[currentControlID * 2 -1][1] = Y;
+                self._setControls[currentControlID - 1].updatePosition(x, y); 
+                self._setControls[currentControlID + 1].updatePosition(x, y);
+            }; 
+        }
+        return controlID;
     },
-    _addMarker: function(pointID){
+    _addMarker: function(pointID, controlID){
         var self = this;
         if(self._setMarkers && 
             self.options.markers && 
@@ -232,13 +299,14 @@ R.BezierAnim = R.Layer.extend({
                                       self.options.markers[pointID].icon.size[0], 
                                       self.options.markers[pointID].icon.size[1]).show();
                 element.attr({cursor:"pointer"});
+                element.data("controlID", controlID);
                 element.data("pointID", pointID);
                 if(self.options.markersInfos){
                     element.data("info", self.options.markersInfos[pointID]);
                 }
                 element.update = function (x, y) {
-                    var currentPointID = this.data("pointID");
-                    self._setControls[currentPointID].update(x, y);
+                    var currentControlID = this.data("controlID");
+                    self._setControls[currentControlID].update(x, y);
                 }; 
                 element.click(function(){
                     if(self._cb && self._cb.onClickMarker){

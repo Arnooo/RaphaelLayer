@@ -30,6 +30,7 @@
                 },
                 onDragControls:function(data){
                     if(data.info){
+						console.log(data.info);
                         if(data.info.tileID >= 0 ){
                             points[data.info.tileID].lat = data.latlng.lat;
                             points[data.info.tileID].lng = data.latlng.lng;
