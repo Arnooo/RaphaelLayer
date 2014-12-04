@@ -168,12 +168,19 @@ R.BezierAnim = R.Layer.extend({
                     Y = this.attr("cy") + y;
                 this.attr({cx: X, cy: Y});
                 var currentPointID = this.data("pointID");
+                var currentControlID = this.data("controlID");
                 self._arrayBezier[1][0] = X;
                 self._arrayBezier[1][1] = Y;
                 var markerPosX = self._setMarkers[currentPointID].attr("x") + x;
                 var markerPosY = self._setMarkers[currentPointID].attr("y") + y;
                 self._setMarkers[currentPointID].attr({x: markerPosX, y: markerPosY});
                 self._pathBezier.attr({path: self._arrayBezier});
+                
+                var latlng = self._map.layerPointToLatLng([X, Y]);
+                self._dataToSend[currentControlID] =  { 
+                    info : this.data("info"),
+                    latlng : latlng
+                };
             }; 
         } 
         else if(pointID > 0 && (self._arrayControls.length - 1) % 3 === 1){
