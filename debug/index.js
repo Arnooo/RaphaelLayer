@@ -23,21 +23,23 @@
                     drag = true;
                 },
                 onClickMarker:function(data){
-                    console.log(data)
+                    console.log(data);
                 },
                 onClickPath:function(data){
-                    console.log(data)
+                    console.log(data);
                 },
-                onDragControls:function(data){
-                    if(data.info){
-						console.log(data.info);
-                        if(data.info.tileID >= 0 ){
-                            points[data.info.tileID].lat = data.latlng.lat;
-                            points[data.info.tileID].lng = data.latlng.lng;
-                        }
-                        else if(data.info.controlID >= 0){
-                            controlsArray[data.info.controlID].lat = data.latlng.lat;
-                            controlsArray[data.info.controlID].lng = data.latlng.lng;
+                onDragControls:function(dataObject){
+                    for(var data in dataObject){
+                        var currentData = dataObject[data];
+                        if(currentData.info){
+                            if(currentData.info.tileID >= 0 ){
+                                points[currentData.info.tileID].lat = currentData.latlng.lat;
+                                points[currentData.info.tileID].lng = currentData.latlng.lng;
+                            }
+                            else if(currentData.info.controlID >= 0){
+                                controlsArray[currentData.info.controlID].lat = currentData.latlng.lat;
+                                controlsArray[currentData.info.controlID].lng = currentData.latlng.lng;
+                            }
                         }
                     }
                 }

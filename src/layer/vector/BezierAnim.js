@@ -95,24 +95,6 @@ R.BezierAnim = R.Layer.extend({
                     this.update(dx - (this.dx || 0), dy - (this.dy || 0));
                     this.dx = dx; 
                     this.dy = dy;
-                    self._dataToSend.info = this.data("info");
-                    var cicleX = this.attr("cx");
-                    var cicleY = this.attr("cy");
-                    var currentControlID = this.data("controlID");
-                    var currentPointID = this.data("pointID");
-                    if(currentPointID > 0 && (currentControlID) % 3 === 0){ 
-                        cicleX = self._setControls[currentControlID-2].attr("cx");
-                        cicleY = self._setControls[currentControlID-2].attr("cy");
-                    }
-                    else if(cicleX && cicleY){
-                        //nothing to do
-                    }
-                    else{
-                        cicleX = self._setControls[currentControlID].attr("cx");
-                        cicleY = self._setControls[currentControlID].attr("cy");
-                    }
-                    self._dataToSend.latlng = self._map.layerPointToLatLng([cicleX, cicleY]);
-                    self._updateLatlngs(currentPointID, self._dataToSend.latlng);
                 }
             };
             function up() {
@@ -138,6 +120,7 @@ R.BezierAnim = R.Layer.extend({
                 }
                 if(self._cb && self._cb.onDragControls){
                     self._cb.onDragControls(self._dataToSend);
+                    self._dataToSend = {};
                 }
             }
             self._setControls.hover(hoverIn, hoverOut);
@@ -212,6 +195,12 @@ R.BezierAnim = R.Layer.extend({
                 self._pathControls.attr({path: self._arrayControls});
                 
                 self._setControls[currentControlID + 2].updatePosition(-x, -y);
+
+                var latlng = self._map.layerPointToLatLng([X, Y]);
+                self._dataToSend[currentControlID] =  { 
+                    info : this.data("info"),
+                    latlng : latlng
+                };
             }; 
             
             circleElement.updatePosition = function (x, y) {
@@ -228,6 +217,12 @@ R.BezierAnim = R.Layer.extend({
                 self._arrayBezier[index][0] = X;
                 self._arrayBezier[index][1] = Y;
                 self._pathBezier.attr({path: self._arrayBezier});
+
+                var latlng = self._map.layerPointToLatLng([X, Y]);
+                self._dataToSend[currentControlID] =  { 
+                    info : this.data("info"),
+                    latlng : latlng
+                };
             }; 
         }
         else if(pointID > 0 && self._arrayControls.length % 3 === 0){
@@ -280,6 +275,14 @@ R.BezierAnim = R.Layer.extend({
                 self._arrayControls[currentControlID * 2 -1][1] = Y;
                 self._setControls[currentControlID - 1].updatePosition(x, y); 
                 self._setControls[currentControlID + 1].updatePosition(x, y);
+
+                var latlng = self._map.layerPointToLatLng([X, Y]);
+                self._dataToSend[currentControlID] =  { 
+                    info : this.data("info"),
+                    latlng : latlng
+                };
+
+                self._updateLatlngs(currentPointID, latlng);
             }; 
         }
         return controlID;
