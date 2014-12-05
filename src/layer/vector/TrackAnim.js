@@ -33,12 +33,17 @@ R.TrackAnim = R.Layer.extend({
                 if(pointID === 0){
                     self._arrayBezier.push("M");
                 }
-                else if(pointID > 0 && pointID%2 === 1) {
-                    self._arrayBezier.push("S"); 
+                else if(pointID > 0) {
+                    self._arrayBezier.push("L"); 
                 }
                 self._arrayBezier.push([currentPoint.x, currentPoint.y]);
-                self._addMarker(pointID);      
             }
+
+            //Draw markers
+            for(var markerID = 0; markerID < self.options.markers.length; markerID++){
+                self._addMarker(markerID);      
+            }
+
             //Convert array to path 
             self._pathBezier = self._paper.path(self._arrayBezier).hide();
             if(self.options.renderLastOnly && self._arrayBezier.length > 2){
