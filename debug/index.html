@@ -1,6 +1,7 @@
 <html>
 	<head>
 		<link rel="stylesheet" href="libs/leaflet/leaflet.css" />
+		<link rel="stylesheet" href="index.css" />
 		<!--[if lte IE 8]>
 		    <link rel="stylesheet" href="libs/leaflet/leaflet.ie.css" />
 		<![endif]-->
@@ -12,6 +13,11 @@
 		<script src="adelaide.js"></script>
 	</head>
 	<body>
+		<nav class="menu">
+			<span>Bezier</span> <input type="radio" name="drawing" value="BezierAnim" onclick="onChangeDrawing(value)" checked></input>
+			</br>
+			<span>Track</span> <input type="radio" name="drawing" value="TrackAnim" onclick="onChangeDrawing(value)"></input>
+		</nav>
 		<div id="map" style="height: 600px"></div>
 		<script src="index.js"></script>
 	</body>

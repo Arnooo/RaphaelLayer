@@ -52,6 +52,12 @@ var deps = {
 		desc: 'Quadratic bezier line animated.'
 	},
 
+	TrackAnim: {
+		src: ['layer/vector/TrackAnim.js'],
+		deps: ['Layer'],
+		desc: 'Track representing a GPS trace animated.'
+	},
+
 	FeatureGroup: {
 		src: ['layer/FeatureGroup.js'],
 		deps: ['Layer'],

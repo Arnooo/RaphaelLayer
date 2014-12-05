@@ -1,3 +1,11 @@
+var CURRENT_DRAWING = "BezierAnim";
+var points = [];
+
+function onChangeDrawing(value){
+    CURRENT_DRAWING = value;
+    points = [];
+};  
+
 (function() {
     var jsonStr = false;
     jsonStr = "{\"editor\":false,\"stories\":{},\"currentStoryID\":\"-JbXTzwEzB5O_hyP_Rll\",\"tiles\":{\"url\":\"https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}\",\"options\":{\"attribution\":\"<a href=\\\"#/wavel/conditions\\\">Conditions</a> | © <a href=\\\"http://www.openstreetmap.org/copyright\\\">OpenStreetMap</a> contributors\"}},\"layers\":{\"baselayers\":{\"topo\":{\"name\":\"Topography map\",\"type\":\"xyz\",\"visible\":true,\"url\":\"https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}\",\"layerParams\":{\"zIndex\":1,\"opacity\":0.6},\"layerOptions\":{\"zIndex\":1,\"opacity\":0.6}}},\"overlays\":{\"-JbY_ttBpztGpHpYsk8c\":{\"name\":\"Raphael\",\"type\":\"raphael\",\"visible\":true,\"layerParams\":{\"index\":20,\"type\":\"BezierAnim\",\"attribut\":{\"stroke\":\"blue\",\"stroke-width\":4},\"callbacks\":{},\"objectOptions\":{\"info\":{\"story\":\"-JbXTzwEzB5O_hyP_Rll\"},\"transition\":{\"animationDuration\":1000,\"icon\":{\"url\":\"img/markers/map/pin/circle/favourite1.png\",\"size\":[32,51],\"anchor\":[16,51],\"hideOnStop\":true,\"stopAt\":1}},\"markers\":[{\"latlng\":{\"lat\":16.720385051693988,\"lng\":-14.589843749999998},\"icon\":{\"anchor\":[16,47],\"size\":[32,47],\"type\":\"tile\",\"url\":\"img/markers/map/pin/circle/adding.png\"}},{\"latlng\":{\"lat\":16.50985588954216,\"lng\":-8.1298828125}},{\"latlng\":{\"lat\":16.551961721972525,\"lng\":-1.669921875},\"icon\":{\"anchor\":[16,51],\"size\":[32,51],\"type\":\"tile\",\"url\":\"img/markers/map/pin/circle/air2.png\"}},{\"latlng\":{\"lat\":37.20367920167702,\"lng\":-3.3837890625}},{\"latlng\":{\"lat\":44.08758502824518,\"lng\":-2.8125},\"icon\":{\"anchor\":[16,51],\"size\":[32,51],\"type\":\"tile\",\"url\":\"img/markers/map/pin/circle/favourite1.png\"}}],\"markersInfos\":[{\"tileID\":\"-JbYEAsO4BrFlINhsXsT\"},{\"controlID\":0},{\"tileID\":\"-JbYEEN-FF_6ZFgO87st\"},{\"controlID\":1},{\"tileID\":\"-JbY_ttBpztGpHpYsk8c\"}],\"pathInfo\":{\"storyID\":0},\"editor\":false},\"markers\":[{\"lat\":16.720385051693988,\"lng\":-14.589843749999998},{\"lat\":16.50985588954216,\"lng\":-8.1298828125},{\"lat\":16.551961721972525,\"lng\":-1.669921875},{\"lat\":37.20367920167702,\"lng\":-3.3837890625},{\"lat\":44.08758502824518,\"lng\":-2.8125}]},\"layerOptions\":{\"index\":20,\"type\":\"BezierAnim\",\"attribut\":{\"stroke\":\"blue\",\"stroke-width\":4},\"callbacks\":{},\"objectOptions\":{\"info\":{\"story\":\"-JbXTzwEzB5O_hyP_Rll\"},\"transition\":{\"animationDuration\":1000,\"icon\":{\"url\":\"img/markers/map/pin/circle/favourite1.png\",\"size\":[32,51],\"anchor\":[16,51],\"hideOnStop\":true,\"stopAt\":1}},\"markers\":[{\"latlng\":{\"lat\":16.720385051693988,\"lng\":-14.589843749999998},\"icon\":{\"anchor\":[16,47],\"size\":[32,47],\"type\":\"tile\",\"url\":\"img/markers/map/pin/circle/adding.png\"}},{\"latlng\":{\"lat\":16.50985588954216,\"lng\":-8.1298828125}},{\"latlng\":{\"lat\":16.551961721972525,\"lng\":-1.669921875},\"icon\":{\"anchor\":[16,51],\"size\":[32,51],\"type\":\"tile\",\"url\":\"img/markers/map/pin/circle/air2.png\"}},{\"latlng\":{\"lat\":37.20367920167702,\"lng\":-3.3837890625}},{\"latlng\":{\"lat\":44.08758502824518,\"lng\":-2.8125},\"icon\":{\"anchor\":[16,51],\"size\":[32,51],\"type\":\"tile\",\"url\":\"img/markers/map/pin/circle/favourite1.png\"}}],\"markersInfos\":[{\"tileID\":\"-JbYEAsO4BrFlINhsXsT\"},{\"controlID\":0},{\"tileID\":\"-JbYEEN-FF_6ZFgO87st\"},{\"controlID\":1},{\"tileID\":\"-JbY_ttBpztGpHpYsk8c\"}],\"pathInfo\":{\"storyID\":0},\"editor\":false},\"markers\":[{\"lat\":16.720385051693988,\"lng\":-14.589843749999998},{\"lat\":16.50985588954216,\"lng\":-8.1298828125},{\"lat\":16.551961721972525,\"lng\":-1.669921875},{\"lat\":37.20367920167702,\"lng\":-3.3837890625},{\"lat\":44.08758502824518,\"lng\":-2.8125}]}}}},\"autoCenter\":false}";
@@ -8,63 +16,121 @@
         maxZoom: 18
     });
     var adelaide = new L.LatLng(-34.93027490891421, 138.603875041008);
-    map.setView(adelaide, 13).addLayer(tiles);
+    map.setView(adelaide, 13).addLayer(tiles);    
     
     var addLayer = function(bezierPoints, iconsArray, infosArray){
-        var bezierAnim = new R.BezierAnim(bezierPoints, {stroke: "red", "stroke-width": 4}, 
-            {
-                onAnimationEnd: function(){
-                    console.log("onAnimationEnd");
-                    for(var i = 0; i < pulseArray.length; i++){
-                        map.removeLayer(pulseArray[i]);
-                    }
-                },
-                onHoverControls:function(){
-                    drag = true;
-                },
-                onClickMarker:function(data){
-                    console.log(data);
-                },
-                onClickPath:function(data){
-                    console.log(data);
-                },
-                onDragControls:function(dataObject){
-                    for(var data in dataObject){
-                        var currentData = dataObject[data];
-                        if(currentData.info){
-                            if(currentData.info.tileID >= 0 ){
-                                points[currentData.info.tileID].lat = currentData.latlng.lat;
-                                points[currentData.info.tileID].lng = currentData.latlng.lng;
-                            }
-                            else if(currentData.info.controlID >= 0){
-                                controlsArray[currentData.info.controlID].lat = currentData.latlng.lat;
-                                controlsArray[currentData.info.controlID].lng = currentData.latlng.lng;
+        if(CURRENT_DRAWING === "BezierAnim"){
+            var bezierAnim = new R.BezierAnim(bezierPoints, {stroke: "red", "stroke-width": 4}, 
+                {
+                    onAnimationEnd: function(){
+                        console.log("onAnimationEnd");
+                        for(var i = 0; i < pulseArray.length; i++){
+                            map.removeLayer(pulseArray[i]);
+                        }
+                    },
+                    onHoverControls:function(){
+                        drag = true;
+                    },
+                    onClickMarker:function(data){
+                        console.log(data);
+                    },
+                    onClickPath:function(data){
+                        console.log(data);
+                    },
+                    onDragControls:function(dataObject){
+                        for(var data in dataObject){
+                            var currentData = dataObject[data];
+                            if(currentData.info){
+                                if(currentData.info.tileID >= 0 ){
+                                    points[currentData.info.tileID].lat = currentData.latlng.lat;
+                                    points[currentData.info.tileID].lng = currentData.latlng.lng;
+                                }
+                                else if(currentData.info.controlID >= 0){
+                                    controlsArray[currentData.info.controlID].lat = currentData.latlng.lat;
+                                    controlsArray[currentData.info.controlID].lng = currentData.latlng.lng;
+                                }
                             }
                         }
                     }
+                },
+                {
+                    transition: {
+                        animationDuration: 1000,
+                        icon:{
+                            url:"libs/leaflet/images/marker-icon.png",
+                            size:[32, 51],
+                            anchor: [16, 51],
+                            hideOnStop: false,
+                            stopAt: 0.7
+                        }
+                    },
+                    markers:iconsArray,
+                    markersInfos:infosArray,
+                    pathInfo:{storyID:0},
+                    startAnimateTimeout: 0,
+                    editor: true,
+                    renderLastOnly: true
                 }
-            },
-            {
-                transition: {
-                    animationDuration: 1000,
-                    icon:{
-                        url:"libs/leaflet/images/marker-icon.png",
-                        size:[32, 51],
-                        anchor: [16, 51],
-                        hideOnStop: false,
-                        stopAt: 0.7
+            );
+            map.addLayer(bezierAnim);
+            overlayMaps["BezierAnim"] = bezierAnim;
+        }
+        else if(CURRENT_DRAWING === "TrackAnim"){
+            var bezierAnim = new R.TrackAnim(bezierPoints, {stroke: "red", "stroke-width": 4}, 
+                {
+                    onAnimationEnd: function(){
+                        console.log("onAnimationEnd");
+                        for(var i = 0; i < pulseArray.length; i++){
+                            map.removeLayer(pulseArray[i]);
+                        }
+                    },
+                    onHoverControls:function(){
+                        drag = true;
+                    },
+                    onClickMarker:function(data){
+                        console.log(data);
+                    },
+                    onClickPath:function(data){
+                        console.log(data);
+                    },
+                    onDragControls:function(dataObject){
+                        for(var data in dataObject){
+                            var currentData = dataObject[data];
+                            if(currentData.info){
+                                if(currentData.info.tileID >= 0 ){
+                                    points[currentData.info.tileID].lat = currentData.latlng.lat;
+                                    points[currentData.info.tileID].lng = currentData.latlng.lng;
+                                }
+                                else if(currentData.info.controlID >= 0){
+                                    controlsArray[currentData.info.controlID].lat = currentData.latlng.lat;
+                                    controlsArray[currentData.info.controlID].lng = currentData.latlng.lng;
+                                }
+                            }
+                        }
                     }
                 },
-                markers:iconsArray,
-                markersInfos:infosArray,
-                pathInfo:{storyID:0},
-                startAnimateTimeout: 0,
-                editor: true,
-                renderLastOnly: true
-            }
-        );
-        map.addLayer(bezierAnim);
-        overlayMaps["BezierAnim"] = bezierAnim;
+                {
+                    transition: {
+                        animationDuration: 1000,
+                        icon:{
+                            url:"libs/leaflet/images/marker-icon.png",
+                            size:[32, 51],
+                            anchor: [16, 51],
+                            hideOnStop: false,
+                            stopAt: 0.7
+                        }
+                    },
+                    markers:iconsArray,
+                    markersInfos:infosArray,
+                    pathInfo:{storyID:0},
+                    startAnimateTimeout: 0,
+                    editor: true,
+                    renderLastOnly: true
+                }
+            );
+            map.addLayer(bezierAnim);
+            overlayMaps["BezierAnim"] = bezierAnim;
+        }
     };
     
 
@@ -78,7 +144,6 @@
     var myControls = L.control.layers(baseMaps, overlayMaps);
     map.addControl(myControls);
     
-    var points = [];
     var controlsArray = [];
     var drag = false;
     var pulseArray = [];

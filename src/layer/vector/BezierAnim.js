@@ -14,20 +14,6 @@ R.BezierAnim = R.Layer.extend({
         this._enableMarkerAnimation = true;
         this._dataToSend = {};
     },
-    _reset:function(){
-        
-        if(this._pathBezier) this._pathBezier.remove();
-        if(this._pathControls) this._pathControls.remove();
-        if(this._circleControls) this._circleControls.remove();
-        if(this._setControls) this._setControls.remove();
-        if(this._setMarkers) this._setMarkers.remove();
-        if(this._pathBezierAnimated) this._pathBezierAnimated.remove();
-        if(this._markerAnimated) this._markerAnimated.remove();
-        if(this._pathBezierFixed) this._pathBezierFixed.remove();
-        this._arrayBezier = [];
-        this._arrayControls = [];
-        this._startNormalized = 0;
-    },
     onRemove: function (map) {
         R.Layer.prototype.onRemove.call(this, map);
         this._reset();
@@ -134,6 +120,20 @@ R.BezierAnim = R.Layer.extend({
             self._addAnimatedPath();
             self._addAnimatedMarker();
         }
+    },
+    _reset:function(){
+        
+        if(this._pathBezier) this._pathBezier.remove();
+        if(this._pathControls) this._pathControls.remove();
+        if(this._circleControls) this._circleControls.remove();
+        if(this._setControls) this._setControls.remove();
+        if(this._setMarkers) this._setMarkers.remove();
+        if(this._pathBezierAnimated) this._pathBezierAnimated.remove();
+        if(this._markerAnimated) this._markerAnimated.remove();
+        if(this._pathBezierFixed) this._pathBezierFixed.remove();
+        this._arrayBezier = [];
+        this._arrayControls = [];
+        this._startNormalized = 0;
     },
     _updateLatlngs:function(pointID, newLatlng){
         var self = this;
@@ -451,25 +451,5 @@ R.BezierAnim = R.Layer.extend({
                 }, self.options.startAnimateTimeout);
             }
         }
-    },
-    getControlPoint: function(start, end) {
-        var cp = { x: 0, y: 0 };
-        cp.x = start.x + (end.x - [start.x]) / 2;
-        cp.y = start.y + (end.y - [start.y]) / 2;
-        var amp = 0;
-
-        if (this.closeTo(start.x, end.x) && !this.closeTo(start.y, end.y)) {
-            amp = (start.x - end.x) * 1 + 15 * (start.x >= end.x ? 1 : -1);
-            cp.x = Math.max(start.x, end.x) + amp;
-        } else {
-            amp = (end.y - start.y) * 1.5 + 15 * (start.y < end.y ? 1 : -1);
-            cp.y = Math.min(start.y, end.y) + amp;
-        }
-        return cp;
-    },
-
-    closeTo: function(a, b) {
-        var t = 15;
-          return (a - b > -t && a - b < t);
     }
 });
