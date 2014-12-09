@@ -1,35 +1,66 @@
 var CURRENT_DRAWING = "BezierAnim";
-var points = [];
 
 function onChangeDrawing(value){
     CURRENT_DRAWING = value;
-    points = [];
 };  
 
-(function() {
-    var jsonStr = false;
-    jsonStr = "{\"editor\":false,\"stories\":{},\"currentStoryID\":\"-JbXTzwEzB5O_hyP_Rll\",\"tiles\":{\"url\":\"https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}\",\"options\":{\"attribution\":\"<a href=\\\"#/wavel/conditions\\\">Conditions</a> | © <a href=\\\"http://www.openstreetmap.org/copyright\\\">OpenStreetMap</a> contributors\"}},\"layers\":{\"baselayers\":{\"topo\":{\"name\":\"Topography map\",\"type\":\"xyz\",\"visible\":true,\"url\":\"https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}\",\"layerParams\":{\"zIndex\":1,\"opacity\":0.6},\"layerOptions\":{\"zIndex\":1,\"opacity\":0.6}}},\"overlays\":{\"-JbY_ttBpztGpHpYsk8c\":{\"name\":\"Raphael\",\"type\":\"raphael\",\"visible\":true,\"layerParams\":{\"index\":20,\"type\":\"BezierAnim\",\"attribut\":{\"stroke\":\"blue\",\"stroke-width\":4},\"callbacks\":{},\"objectOptions\":{\"info\":{\"story\":\"-JbXTzwEzB5O_hyP_Rll\"},\"transition\":{\"animationDuration\":1000,\"icon\":{\"url\":\"img/markers/map/pin/circle/favourite1.png\",\"size\":[32,51],\"anchor\":[16,51],\"hideOnStop\":true,\"stopAt\":1}},\"markers\":[{\"latlng\":{\"lat\":16.720385051693988,\"lng\":-14.589843749999998},\"icon\":{\"anchor\":[16,47],\"size\":[32,47],\"type\":\"tile\",\"url\":\"img/markers/map/pin/circle/adding.png\"}},{\"latlng\":{\"lat\":16.50985588954216,\"lng\":-8.1298828125}},{\"latlng\":{\"lat\":16.551961721972525,\"lng\":-1.669921875},\"icon\":{\"anchor\":[16,51],\"size\":[32,51],\"type\":\"tile\",\"url\":\"img/markers/map/pin/circle/air2.png\"}},{\"latlng\":{\"lat\":37.20367920167702,\"lng\":-3.3837890625}},{\"latlng\":{\"lat\":44.08758502824518,\"lng\":-2.8125},\"icon\":{\"anchor\":[16,51],\"size\":[32,51],\"type\":\"tile\",\"url\":\"img/markers/map/pin/circle/favourite1.png\"}}],\"markersInfos\":[{\"tileID\":\"-JbYEAsO4BrFlINhsXsT\"},{\"controlID\":0},{\"tileID\":\"-JbYEEN-FF_6ZFgO87st\"},{\"controlID\":1},{\"tileID\":\"-JbY_ttBpztGpHpYsk8c\"}],\"pathInfo\":{\"storyID\":0},\"editor\":false},\"markers\":[{\"lat\":16.720385051693988,\"lng\":-14.589843749999998},{\"lat\":16.50985588954216,\"lng\":-8.1298828125},{\"lat\":16.551961721972525,\"lng\":-1.669921875},{\"lat\":37.20367920167702,\"lng\":-3.3837890625},{\"lat\":44.08758502824518,\"lng\":-2.8125}]},\"layerOptions\":{\"index\":20,\"type\":\"BezierAnim\",\"attribut\":{\"stroke\":\"blue\",\"stroke-width\":4},\"callbacks\":{},\"objectOptions\":{\"info\":{\"story\":\"-JbXTzwEzB5O_hyP_Rll\"},\"transition\":{\"animationDuration\":1000,\"icon\":{\"url\":\"img/markers/map/pin/circle/favourite1.png\",\"size\":[32,51],\"anchor\":[16,51],\"hideOnStop\":true,\"stopAt\":1}},\"markers\":[{\"latlng\":{\"lat\":16.720385051693988,\"lng\":-14.589843749999998},\"icon\":{\"anchor\":[16,47],\"size\":[32,47],\"type\":\"tile\",\"url\":\"img/markers/map/pin/circle/adding.png\"}},{\"latlng\":{\"lat\":16.50985588954216,\"lng\":-8.1298828125}},{\"latlng\":{\"lat\":16.551961721972525,\"lng\":-1.669921875},\"icon\":{\"anchor\":[16,51],\"size\":[32,51],\"type\":\"tile\",\"url\":\"img/markers/map/pin/circle/air2.png\"}},{\"latlng\":{\"lat\":37.20367920167702,\"lng\":-3.3837890625}},{\"latlng\":{\"lat\":44.08758502824518,\"lng\":-2.8125},\"icon\":{\"anchor\":[16,51],\"size\":[32,51],\"type\":\"tile\",\"url\":\"img/markers/map/pin/circle/favourite1.png\"}}],\"markersInfos\":[{\"tileID\":\"-JbYEAsO4BrFlINhsXsT\"},{\"controlID\":0},{\"tileID\":\"-JbYEEN-FF_6ZFgO87st\"},{\"controlID\":1},{\"tileID\":\"-JbY_ttBpztGpHpYsk8c\"}],\"pathInfo\":{\"storyID\":0},\"editor\":false},\"markers\":[{\"lat\":16.720385051693988,\"lng\":-14.589843749999998},{\"lat\":16.50985588954216,\"lng\":-8.1298828125},{\"lat\":16.551961721972525,\"lng\":-1.669921875},{\"lat\":37.20367920167702,\"lng\":-3.3837890625},{\"lat\":44.08758502824518,\"lng\":-2.8125}]}}}},\"autoCenter\":false}";
-   
-    var map = new L.Map('map');
-    var tiles = new L.TileLayer('http://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '',
-        maxZoom: 18
-    });
-    var adelaide = new L.LatLng(-34.93027490891421, 138.603875041008);
-    map.setView(adelaide, 13).addLayer(tiles);    
-    
-    var addLayer = function(bezierPoints, iconsArray, infosArray){
-        if(CURRENT_DRAWING === "BezierAnim"){
+var OMap = {
+    _map: null,
+    _baseMaps: {},
+    _overlayMaps: {},
+    getMap: function(){
+        return this._map;
+    },
+    init: function(jsonData){
+        var self = this;
+        self._map = new L.Map('map');
+
+        var tiles = new L.TileLayer('http://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '',
+            maxZoom: 18
+        });  
+        var adelaide = new L.LatLng(-34.93027490891421, 138.603875041008);
+        self._map.setView(adelaide, 13).addLayer(tiles);  
+
+
+        var myControls = L.control.layers(self._map._baseMaps, self._map._overlayMaps);
+        self._map.addControl(myControls);
+        
+        if(jsonData){
+            for(var key in jsonData.layers.overlays){
+                var obj = jsonData.layers.overlays[key];
+                self._map.setView(obj.layerParams.markers[0], 4)
+                self.addLayer(obj.layerParams.markers,
+                         obj.layerParams.objectOptions.markers,
+                         obj.layerParams.objectOptions.markersInfos
+                );
+            }
+        }
+    },
+    on:function(eventName, callback){
+		var self = this;
+        self._map.on(eventName, callback);
+	},
+    off:function(eventName, callback){
+		var self = this;
+        self._map.off(eventName, callback);
+	},
+    update: function(){
+        var self = this;
+        self._map.removeControl(myControls);
+        myControls = L.control.layers(self._map._baseMaps, self._map._overlayMaps);
+        self._map.addControl(myControls);
+    },
+    addLayer: function(bezierPoints, iconsArray, infosArray){
+        var self = this;
+		if(CURRENT_DRAWING === "BezierAnim"){
             var bezierAnim = new R.BezierAnim(bezierPoints, {stroke: "red", "stroke-width": 4}, 
                 {
                     onAnimationEnd: function(){
                         console.log("onAnimationEnd");
-                        for(var i = 0; i < pulseArray.length; i++){
-                            map.removeLayer(pulseArray[i]);
-                        }
                     },
                     onHoverControls:function(){
-                        drag = true;
+                        console.log("onHoverControls");
                     },
                     onClickMarker:function(data){
                         console.log(data);
@@ -38,7 +69,7 @@ function onChangeDrawing(value){
                         console.log(data);
                     },
                     onDragControls:function(dataObject){
-                        for(var data in dataObject){
+                       /* for(var data in dataObject){
                             var currentData = dataObject[data];
                             if(currentData.info){
                                 if(currentData.info.tileID >= 0 ){
@@ -50,7 +81,7 @@ function onChangeDrawing(value){
                                     controlsArray[currentData.info.controlID].lng = currentData.latlng.lng;
                                 }
                             }
-                        }
+                        }*/
                     }
                 },
                 {
@@ -72,20 +103,17 @@ function onChangeDrawing(value){
                     renderLastOnly: true
                 }
             );
-            map.addLayer(bezierAnim);
-            overlayMaps["BezierAnim"] = bezierAnim;
+            self._map.addLayer(bezierAnim);
+            self._overlayMaps["BezierAnim"] = bezierAnim;
         }
         else if(CURRENT_DRAWING === "TrackAnim"){
             var bezierAnim = new R.TrackAnim(bezierPoints, {stroke: "red", "stroke-width": 4}, 
                 {
                     onAnimationEnd: function(){
                         console.log("onAnimationEnd");
-                        for(var i = 0; i < pulseArray.length; i++){
-                            map.removeLayer(pulseArray[i]);
-                        }
                     },
                     onHoverControls:function(){
-                        drag = true;
+                        console.log("onHoverControls");
                     },
                     onClickMarker:function(data){
                         console.log(data);
@@ -94,7 +122,7 @@ function onChangeDrawing(value){
                         console.log(data);
                     },
                     onDragControls:function(dataObject){
-                        for(var data in dataObject){
+                       /* for(var data in dataObject){
                             var currentData = dataObject[data];
                             if(currentData.info){
                                 if(currentData.info.tileID >= 0 ){
@@ -106,7 +134,7 @@ function onChangeDrawing(value){
                                     controlsArray[currentData.info.controlID].lng = currentData.latlng.lng;
                                 }
                             }
-                        }
+                        }*/
                     }
                 },
                 {
@@ -128,85 +156,63 @@ function onChangeDrawing(value){
                     renderLastOnly: true
                 }
             );
-            map.addLayer(bezierAnim);
-            overlayMaps["BezierAnim"] = bezierAnim;
+            self._map.addLayer(bezierAnim);
+            self._overlayMaps["BezierAnim"] = bezierAnim;
         }
-    };
-    
+	}
+};
 
-
-    
-   // var m = new R.Marker(adelaide);
-   // map.addLayer(m);
-
-    var baseMaps = {};
-    var overlayMaps = {};
-    var myControls = L.control.layers(baseMaps, overlayMaps);
-    map.addControl(myControls);
-    
-    var controlsArray = [];
-    var drag = false;
-    var pulseArray = [];
-    
-    if(jsonStr){
-        var jsonData = JSON.parse(jsonStr);
-        for(var key in jsonData.layers.overlays){
-			var obj = jsonData.layers.overlays[key];
-			map.setView(obj.layerParams.markers[0], 4)
-			addLayer(obj.layerParams.markers,
-					 obj.layerParams.objectOptions.markers,
-					 obj.layerParams.objectOptions.markersInfos
-			);
+var OMapEvent = {
+	_oMap:null,
+	_oMapModel:null,
+	init:function(oMap, oMapModel){
+		var self = this;
+		self._oMap = oMap;
+		self._oMapModel = oMapModel;
+		
+	    self._oMap.on('click', self._onClickEvent);
+	},
+	_onClickEvent: function(event){
+		OMapModel.pushPoint(event.latlng);
+	},
+	_onMouseMoveEvent: function(event){
+		OMapModel.pushPoint(event.latlng);
+	},
+	onChangeDrawing:function(value){
+		var self = this;
+		CURRENT_DRAWING = value;
+		if(CURRENT_DRAWING === "TrackAnim"){
+			self._oMap.on('mousemove', self._onMouseMoveEvent);
 		}
-    }
-    else{
-        
-    }
-    
+		else{	
+			self._oMap.off('mousemove', self._onMouseMoveEvent);
+		}
+	}
+};
 
-    var updateControls = function(){
-        map.removeControl(myControls);
-        myControls = L.control.layers(baseMaps, overlayMaps);
-        map.addControl(myControls);
-    };  
+var OMapModel = {
+	_oMap:null,
+	_oMapEvent:null,
+	_points:[],
+	init:function(){
+		var self = this;
+		var jsonStr = false;
+		jsonStr = "{\"editor\":false,\"stories\":{},\"currentStoryID\":\"-JbXTzwEzB5O_hyP_Rll\",\"tiles\":{\"url\":\"https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}\",\"options\":{\"attribution\":\"<a href=\\\"#/wavel/conditions\\\">Conditions</a> | © <a href=\\\"http://www.openstreetmap.org/copyright\\\">OpenStreetMap</a> contributors\"}},\"layers\":{\"baselayers\":{\"topo\":{\"name\":\"Topography map\",\"type\":\"xyz\",\"visible\":true,\"url\":\"https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}\",\"layerParams\":{\"zIndex\":1,\"opacity\":0.6},\"layerOptions\":{\"zIndex\":1,\"opacity\":0.6}}},\"overlays\":{\"-JbY_ttBpztGpHpYsk8c\":{\"name\":\"Raphael\",\"type\":\"raphael\",\"visible\":true,\"layerParams\":{\"index\":20,\"type\":\"BezierAnim\",\"attribut\":{\"stroke\":\"blue\",\"stroke-width\":4},\"callbacks\":{},\"objectOptions\":{\"info\":{\"story\":\"-JbXTzwEzB5O_hyP_Rll\"},\"transition\":{\"animationDuration\":1000,\"icon\":{\"url\":\"img/markers/map/pin/circle/favourite1.png\",\"size\":[32,51],\"anchor\":[16,51],\"hideOnStop\":true,\"stopAt\":1}},\"markers\":[{\"latlng\":{\"lat\":16.720385051693988,\"lng\":-14.589843749999998},\"icon\":{\"anchor\":[16,47],\"size\":[32,47],\"type\":\"tile\",\"url\":\"img/markers/map/pin/circle/adding.png\"}},{\"latlng\":{\"lat\":16.50985588954216,\"lng\":-8.1298828125}},{\"latlng\":{\"lat\":16.551961721972525,\"lng\":-1.669921875},\"icon\":{\"anchor\":[16,51],\"size\":[32,51],\"type\":\"tile\",\"url\":\"img/markers/map/pin/circle/air2.png\"}},{\"latlng\":{\"lat\":37.20367920167702,\"lng\":-3.3837890625}},{\"latlng\":{\"lat\":44.08758502824518,\"lng\":-2.8125},\"icon\":{\"anchor\":[16,51],\"size\":[32,51],\"type\":\"tile\",\"url\":\"img/markers/map/pin/circle/favourite1.png\"}}],\"markersInfos\":[{\"tileID\":\"-JbYEAsO4BrFlINhsXsT\"},{\"controlID\":0},{\"tileID\":\"-JbYEEN-FF_6ZFgO87st\"},{\"controlID\":1},{\"tileID\":\"-JbY_ttBpztGpHpYsk8c\"}],\"pathInfo\":{\"storyID\":0},\"editor\":false},\"markers\":[{\"lat\":16.720385051693988,\"lng\":-14.589843749999998},{\"lat\":16.50985588954216,\"lng\":-8.1298828125},{\"lat\":16.551961721972525,\"lng\":-1.669921875},{\"lat\":37.20367920167702,\"lng\":-3.3837890625},{\"lat\":44.08758502824518,\"lng\":-2.8125}]},\"layerOptions\":{\"index\":20,\"type\":\"BezierAnim\",\"attribut\":{\"stroke\":\"blue\",\"stroke-width\":4},\"callbacks\":{},\"objectOptions\":{\"info\":{\"story\":\"-JbXTzwEzB5O_hyP_Rll\"},\"transition\":{\"animationDuration\":1000,\"icon\":{\"url\":\"img/markers/map/pin/circle/favourite1.png\",\"size\":[32,51],\"anchor\":[16,51],\"hideOnStop\":true,\"stopAt\":1}},\"markers\":[{\"latlng\":{\"lat\":16.720385051693988,\"lng\":-14.589843749999998},\"icon\":{\"anchor\":[16,47],\"size\":[32,47],\"type\":\"tile\",\"url\":\"img/markers/map/pin/circle/adding.png\"}},{\"latlng\":{\"lat\":16.50985588954216,\"lng\":-8.1298828125}},{\"latlng\":{\"lat\":16.551961721972525,\"lng\":-1.669921875},\"icon\":{\"anchor\":[16,51],\"size\":[32,51],\"type\":\"tile\",\"url\":\"img/markers/map/pin/circle/air2.png\"}},{\"latlng\":{\"lat\":37.20367920167702,\"lng\":-3.3837890625}},{\"latlng\":{\"lat\":44.08758502824518,\"lng\":-2.8125},\"icon\":{\"anchor\":[16,51],\"size\":[32,51],\"type\":\"tile\",\"url\":\"img/markers/map/pin/circle/favourite1.png\"}}],\"markersInfos\":[{\"tileID\":\"-JbYEAsO4BrFlINhsXsT\"},{\"controlID\":0},{\"tileID\":\"-JbYEEN-FF_6ZFgO87st\"},{\"controlID\":1},{\"tileID\":\"-JbY_ttBpztGpHpYsk8c\"}],\"pathInfo\":{\"storyID\":0},\"editor\":false},\"markers\":[{\"lat\":16.720385051693988,\"lng\":-14.589843749999998},{\"lat\":16.50985588954216,\"lng\":-8.1298828125},{\"lat\":16.551961721972525,\"lng\":-1.669921875},{\"lat\":37.20367920167702,\"lng\":-3.3837890625},{\"lat\":44.08758502824518,\"lng\":-2.8125}]}}}},\"autoCenter\":false}";
+		var jsonData = JSON.parse(jsonStr);
+		self._oMap = OMap;
+		self._oMapEvent = OMapEvent;
+		self._oMap.init(jsonData);
+		self._oMapEvent.init(self._oMap, OMapModel);
+	},
+	pushPoint:function(point){
+		var self = this;
+        self._points.push(point);
         
-   
-    var onClickEvent = function(e) {
-        if(drag){
-            drag = false;
-            return;
-        }
-        points.push(e.latlng);
-        
-//         if(points.length == 4) {
-//             var p = new R.Polygon(points);
-//             map.addLayer(p);
-//             p.hover(function() {
-// 
-//             },
-//             function() {
-//                 p.animate({opacity: 0}, 1000, function() { map.removeLayer(p); });
-// 
-//             });
-// 
-//             points = [];
-//         }
-   /*     pulseArray.push(new R.Pulse( 
-            e.latlng, 
-            6,
-            {'stroke': '#2478ad', 'fill': '#30a3ec'}, 
-            {'stroke': '#30a3ec', 'stroke-width': 3}
-        ));
-        map.addLayer(pulseArray[pulseArray.length-1]);*/
-   
-   if(points.length >= 1){
-
-            if(overlayMaps["BezierAnim"]){
-                map.removeLayer(overlayMaps["BezierAnim"]);
-            }
-            var iconsArray = [];
+		if(self._points.length >= 1){
+			var iconsArray = [];
             var bezierPoints = [];
             var infosArray = [];
+			var controlsArray = [];
             var addPoint = function(point, info, useIcon){
                 bezierPoints.push(point);
                 infosArray.push(info);
@@ -227,11 +233,11 @@ function onChangeDrawing(value){
                 }
             };
 
-            addPoint(points[0], {tileID:0}, true);
-            for(var i = 1; i < points.length; i++){
+            addPoint(self._points[0], {tileID:0}, true);
+            for(var i = 1; i < self._points.length; i++){
                 //Compute controls points
-                var firstControl = Object.create(points[i-1]);
-                var secondControl = Object.create(points[i]);
+                var firstControl = Object.create(self._points[i-1]);
+                var secondControl = Object.create(self._points[i]);
                 var offset = {
                     lat: (secondControl.lat - firstControl.lat) / 4.0,
                     lng: (secondControl.lng - firstControl.lng) / 2.0
@@ -249,32 +255,19 @@ function onChangeDrawing(value){
                     controlsArray.push(secondControl);
                     addPoint(secondControl, {controlID:i-1}, false);
                 }
-                addPoint(points[i], {tileID:i}, true);
+                addPoint(self._points[i], {tileID:i}, true);
             }
             
-            addLayer(bezierPoints, iconsArray, infosArray);
-            updateControls();
-        }
-    };
+            self._oMap.addLayer(bezierPoints, iconsArray, infosArray);
+           // updateControls();
+		}
+	}
+};
 
-   /* var geo = new R.GeoJSON(multi_geo);
+//----------------------
+// MAIN 
+OMapModel.init();
 
-    map.addLayer(geo);
-    geo.hover(
-        function() { 
 
-        }, 
-        function() { 
-            geo.animate(
-                {opacity: 0}, 
-                1000, 
-                function() { 
-
-                })}, 
-            geo, 
-            geo);*/
    
    
-   map.on('click', onClickEvent);
-
-})();
