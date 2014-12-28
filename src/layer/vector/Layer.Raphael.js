@@ -5,6 +5,10 @@ R.Layer = L.Class.extend({
         this.options = options;
     },
 
+    update: function(options){
+        this.options = options;
+    },
+    
     onAdd: function (map) {
         this._map = map;
         this._map._initRaphaelRoot();

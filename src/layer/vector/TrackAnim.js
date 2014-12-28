@@ -14,6 +14,11 @@ R.TrackAnim = R.Layer.extend({
         this._enableMarkerAnimation = true;
         this._dataToSend = {};
     },
+    update: function(data){
+        R.Layer.prototype.update.call(this, data.objectOptions);
+        this.initialize(data.markers, data.attribut, data.callbacks, data.objectOptions);
+        this.projectLatLngs();
+    },
     onRemove: function (map) {
         R.Layer.prototype.onRemove.call(this, map);
         this._reset();
@@ -40,13 +45,15 @@ R.TrackAnim = R.Layer.extend({
             }
 
             //Draw markers
-            for(var markerID = 0; markerID < self.options.markers.length; markerID++){
-                self._addMarker(markerID);      
+            if(self.options && self.options.markers){
+                for(var markerID = 0; markerID < self.options.markers.length; markerID++){
+                    self._addMarker(markerID);      
+                }
             }
 
             //Convert array to path 
             self._pathBezier = self._paper.path(self._arrayBezier).hide();
-            if(self.options.renderLastOnly && self._arrayBezier.length > 2){
+            if(self.options && self.options.renderLastOnly && self._arrayBezier.length > 2){
                 self._pathBezierFixed = self._paper.path(self._arrayBezier.slice(0, self._arrayBezier.length - 3));
                 self._pathBezierFixed.attr(self._attr);
                 self._startNormalized = self._pathBezierFixed.getTotalLength() / self._pathBezier.getTotalLength();
@@ -80,6 +87,7 @@ R.TrackAnim = R.Layer.extend({
     _addMarker: function(pointID){
         var self = this;
         if(self._setMarkers && 
+            self.options &&
             self.options.markers && 
             self.options.markers[pointID]){
             var point = self._map.latLngToLayerPoint(self.options.markers[pointID].latlng);
@@ -131,7 +139,7 @@ R.TrackAnim = R.Layer.extend({
                 self._markers.show();
             }
         };
-        if(self.options.transition){
+        if(self.options && self.options.transition){
             this._paper.customAttributes.alongBezier = function(a) {
                 var r = this.data('reverse');
                 var len = this.data('pathLength');
@@ -166,7 +174,8 @@ R.TrackAnim = R.Layer.extend({
     },
     _addAnimatedMarker: function(){
         var self = this;
-        if(self.options.transition &&
+        if(self.options &&
+            self.options.transition &&
             self.options.transition.icon && 
             self.options.transition.icon.url !== ""
         ){

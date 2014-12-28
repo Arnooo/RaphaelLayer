@@ -36,6 +36,10 @@ R.Layer = L.Class.extend({
         this.options = options;
     },
 
+    update: function(options){
+        this.options = options;
+    },
+    
     onAdd: function (map) {
         this._map = map;
         this._map._initRaphaelRoot();
@@ -351,6 +355,11 @@ R.BezierAnim = R.Layer.extend({
         this._enableMarkerAnimation = true;
         this._dataToSend = {};
     },
+    update: function(data){
+        R.Layer.prototype.update.call(this, data.objectOptions);
+        this.initialize(data.markers, data.attribut, data.callbacks, data.objectOptions);
+        this.projectLatLngs();
+    },
     onRemove: function (map) {
         R.Layer.prototype.onRemove.call(this, map);
         this._reset();
@@ -388,7 +397,7 @@ R.BezierAnim = R.Layer.extend({
             }
             //Convert array to path 
             self._pathBezier = self._paper.path(self._arrayBezier).hide();
-            if(self.options.renderLastOnly && self._arrayBezier.length > 2){
+            if(self.options && self.options.renderLastOnly && self._arrayBezier.length > 2){
                 self._pathBezierFixed = self._paper.path(self._arrayBezier.slice(0, self._arrayBezier.length - 3));
                 self._pathBezierFixed.attr(self._attr);
                 self._startNormalized = self._pathBezierFixed.getTotalLength() / self._pathBezier.getTotalLength();
@@ -402,7 +411,7 @@ R.BezierAnim = R.Layer.extend({
             self._pathControls.attr({stroke: "#000", "stroke-dasharray": "- "});
 
             //Reorder elements
-            if(!self.options.editor){
+            if(self.options && !self.options.editor){
                 self._setControls.hide();
             }
             else{
@@ -424,7 +433,7 @@ R.BezierAnim = R.Layer.extend({
                 this.dx = this.dy = 0;
             }
 
-            if(self.options.editor){
+            if(self.options && self.options.editor){
                 self._setControls.drag(move, up);
                 self._setMarkers.drag(move, up);
             }
@@ -494,7 +503,7 @@ R.BezierAnim = R.Layer.extend({
         var circleElement = self._paper.circle(currentPoint.x, currentPoint.y, 5).attr({fill: "#fff", stroke: "#000", cursor:"pointer"});
         circleElement.data("pointID", pointID);
         circleElement.data("controlID", controlID);
-        if(self.options.markersInfos){
+        if(self.options && self.options.markersInfos){
             circleElement.data("info", self.options.markersInfos[pointID]);
         }
         self._setControls.push(circleElement);
@@ -634,6 +643,7 @@ R.BezierAnim = R.Layer.extend({
     _addMarker: function(pointID, controlID){
         var self = this;
         if(self._setMarkers && 
+            self.options &&
             self.options.markers && 
             self.options.markers[pointID]){
             var point = self._map.latLngToLayerPoint(self.options.markers[pointID].latlng);
@@ -694,7 +704,7 @@ R.BezierAnim = R.Layer.extend({
                 self._markers.show();
             }
         };
-        if(self.options.transition){
+        if(self.options && self.options.transition){
             this._paper.customAttributes.alongBezier = function(a) {
                 var r = this.data('reverse');
                 var len = this.data('pathLength');
@@ -729,7 +739,8 @@ R.BezierAnim = R.Layer.extend({
     },
     _addAnimatedMarker: function(){
         var self = this;
-        if(self.options.transition &&
+        if(self.options &&
+            self.options.transition &&
             self.options.transition.icon && 
             self.options.transition.icon.url !== ""
         ){
@@ -807,6 +818,11 @@ R.TrackAnim = R.Layer.extend({
         this._enableMarkerAnimation = true;
         this._dataToSend = {};
     },
+    update: function(data){
+        R.Layer.prototype.update.call(this, data.objectOptions);
+        this.initialize(data.markers, data.attribut, data.callbacks, data.objectOptions);
+        this.projectLatLngs();
+    },
     onRemove: function (map) {
         R.Layer.prototype.onRemove.call(this, map);
         this._reset();
@@ -833,13 +849,15 @@ R.TrackAnim = R.Layer.extend({
             }
 
             //Draw markers
-            for(var markerID = 0; markerID < self.options.markers.length; markerID++){
-                self._addMarker(markerID);      
+            if(self.options && self.options.markers){
+                for(var markerID = 0; markerID < self.options.markers.length; markerID++){
+                    self._addMarker(markerID);      
+                }
             }
 
             //Convert array to path 
             self._pathBezier = self._paper.path(self._arrayBezier).hide();
-            if(self.options.renderLastOnly && self._arrayBezier.length > 2){
+            if(self.options && self.options.renderLastOnly && self._arrayBezier.length > 2){
                 self._pathBezierFixed = self._paper.path(self._arrayBezier.slice(0, self._arrayBezier.length - 3));
                 self._pathBezierFixed.attr(self._attr);
                 self._startNormalized = self._pathBezierFixed.getTotalLength() / self._pathBezier.getTotalLength();
@@ -873,6 +891,7 @@ R.TrackAnim = R.Layer.extend({
     _addMarker: function(pointID){
         var self = this;
         if(self._setMarkers && 
+            self.options &&
             self.options.markers && 
             self.options.markers[pointID]){
             var point = self._map.latLngToLayerPoint(self.options.markers[pointID].latlng);
@@ -924,7 +943,7 @@ R.TrackAnim = R.Layer.extend({
                 self._markers.show();
             }
         };
-        if(self.options.transition){
+        if(self.options && self.options.transition){
             this._paper.customAttributes.alongBezier = function(a) {
                 var r = this.data('reverse');
                 var len = this.data('pathLength');
@@ -959,7 +978,8 @@ R.TrackAnim = R.Layer.extend({
     },
     _addAnimatedMarker: function(){
         var self = this;
-        if(self.options.transition &&
+        if(self.options &&
+            self.options.transition &&
             self.options.transition.icon && 
             self.options.transition.icon.url !== ""
         ){
